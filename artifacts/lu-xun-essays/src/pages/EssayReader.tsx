@@ -100,9 +100,10 @@ export function EssayReader() {
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5" /> Contexto Histórico
                 </h4>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  {essay.historicalContextPt}
-                </p>
+                <div
+                  className="text-muted-foreground leading-relaxed text-sm prose prose-sm prose-stone dark:prose-invert max-w-none prose-p:my-2"
+                  dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.historicalContextPt) }}
+                />
               </div>
             )}
           </div>
@@ -176,7 +177,10 @@ export function EssayReader() {
                   {essay.translationNotesPt && (
                     <div className="bg-card/30 p-4 rounded-sm border border-border/20 mt-4">
                       <strong className="block mb-2 text-foreground/70">Notas de Tradução:</strong>
-                      <p className="leading-relaxed">{essay.translationNotesPt}</p>
+                      <div
+                        className="leading-relaxed prose prose-sm prose-stone dark:prose-invert max-w-none prose-p:my-2"
+                        dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.translationNotesPt) }}
+                      />
                     </div>
                   )}
                 </div>
@@ -198,20 +202,42 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function renderInline(text: string): string {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
+}
+
 function renderEssayMarkup(raw: string): string {
   const blocks = raw.split(/\n\s*\n/);
   return blocks
     .map((block) => {
       const trimmed = block.trim();
       if (!trimmed) return "";
+
       const headerMatch = trimmed.match(/^\*\*(.+?)\*\*$/);
       if (headerMatch) {
         return `<h2 class="text-center text-2xl font-semibold tracking-wider my-10 text-primary/80">${escapeHtml(headerMatch[1])}</h2>`;
       }
-      const inline = escapeHtml(trimmed)
-        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*(.+?)\*/g, "<em>$1</em>")
-        .replace(/\n/g, "<br/>");
+
+      const lines = trimmed.split(/\n/);
+
+      if (lines.every((l) => /^>\s?/.test(l))) {
+        const inner = lines.map((l) => renderInline(l.replace(/^>\s?/, ""))).join("<br/>");
+        return `<blockquote class="border-l-2 border-primary/40 pl-4 italic my-3">${inner}</blockquote>`;
+      }
+
+      if (lines.every((l) => /^\d+\.\s+/.test(l))) {
+        const items = lines.map((l) => `<li>${renderInline(l.replace(/^\d+\.\s+/, ""))}</li>`).join("");
+        return `<ol class="list-decimal pl-6 space-y-1 my-2">${items}</ol>`;
+      }
+
+      if (lines.every((l) => /^[-*]\s+/.test(l))) {
+        const items = lines.map((l) => `<li>${renderInline(l.replace(/^[-*]\s+/, ""))}</li>`).join("");
+        return `<ul class="list-disc pl-6 space-y-1 my-2">${items}</ul>`;
+      }
+
+      const inline = renderInline(trimmed).replace(/\n/g, "<br/>");
       return `<p>${inline}</p>`;
     })
     .join("\n");

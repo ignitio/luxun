@@ -11,6 +11,7 @@ import {
   clearSession,
   getOidcConfig,
   getSessionId,
+  getSession,
   createSession,
   deleteSession,
   SESSION_COOKIE,
@@ -30,10 +31,12 @@ function getOrigin(req: Request): string {
   return `${proto}://${host}`;
 }
 
+const isSecure = process.env.NODE_ENV === "production";
+
 function setSessionCookie(res: Response, sid: string) {
   res.cookie(SESSION_COOKIE, sid, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_TTL,
@@ -43,7 +46,7 @@ function setSessionCookie(res: Response, sid: string) {
 function setOidcCookie(res: Response, name: string, value: string) {
   res.cookie(name, value, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: OIDC_COOKIE_TTL,
@@ -188,18 +191,55 @@ router.get("/callback", async (req: Request, res: Response) => {
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
   const origin = getOrigin(req);
-
   const sid = getSessionId(req);
+  const session = sid ? await getSession(sid) : null;
   await clearSession(res, sid);
 
-  const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
-    post_logout_redirect_uri: origin,
-  });
+  // Only do OIDC end-session for real Replit sessions (have a refresh token)
+  if (session?.refresh_token) {
+    try {
+      const config = await getOidcConfig();
+      const endSessionUrl = oidc.buildEndSessionUrl(config, {
+        client_id: process.env.REPL_ID!,
+        post_logout_redirect_uri: origin,
+      });
+      res.redirect(endSessionUrl.href);
+      return;
+    } catch {
+      // fall through to simple redirect
+    }
+  }
 
-  res.redirect(endSessionUrl.href);
+  res.redirect(origin);
+});
+
+router.post("/admin-login", async (req: Request, res: Response) => {
+  const { username, password } = (req.body ?? {}) as Record<string, unknown>;
+  const expectedUser = process.env.ADMIN_USERNAME ?? "luojie";
+  const expectedPass = process.env.ADMIN_PASSWORD ?? "luxun";
+
+  if (username !== expectedUser || password !== expectedPass) {
+    res.status(401).json({ error: "Credenciais inválidas" });
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const sessionData: SessionData = {
+    user: {
+      id: expectedUser,
+      email: null,
+      firstName: "Admin",
+      lastName: null,
+      profileImageUrl: null,
+    },
+    access_token: "password-auth",
+    expires_at: now + SESSION_TTL / 1000,
+  };
+
+  const sid = await createSession(sessionData);
+  setSessionCookie(res, sid);
+  res.json({ success: true });
 });
 
 router.post(

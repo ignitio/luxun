@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: essay-archive
+    runtime: node
+    region: oregon
+    plan: free
+    # Build frontend first so the API server can serve it as static files
+    buildCommand: >-
+      npm install -g pnpm &&
+      pnpm install --frozen-lockfile &&
+      PORT=10000 BASE_PATH=/ pnpm --filter @workspace/lu-xun-essays run build &&
+      pnpm --filter @workspace/api-server run build
+    # Run schema push on every start (idempotent) then start the server
+    startCommand: pnpm --filter @workspace/db run push && node --enable-source-maps artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ISSUER_URL
+        value: https://replit.com/oidc
+      - key: DATABASE_URL
+        sync: false
+      - key: REPL_ID
+        sync: false
+      - key: ADMIN_REPLIT_USER_IDS
+        sync: false

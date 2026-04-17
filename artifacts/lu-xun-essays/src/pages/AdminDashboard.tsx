@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Pencil, Trash2, ExternalLink, Download, LogOut } from "lucide-react";
+import { Upload, Pencil, Trash2, ExternalLink, Download, LogOut, FolderTree } from "lucide-react";
 
 export function AdminDashboard() {
   const { isLoading, isAuthenticated, user, logout } = useAuth();
@@ -125,6 +125,11 @@ export function AdminDashboard() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Link href="/admin/collections">
+            <Button variant="outline" data-testid="button-collections">
+              <FolderTree className="w-4 h-4 mr-2" /> Coleções
+            </Button>
+          </Link>
           <Button variant="outline" onClick={downloadTemplate} data-testid="button-template">
             <Download className="w-4 h-4 mr-2" /> Baixar modelo Markdown
           </Button>

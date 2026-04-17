@@ -2,9 +2,30 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import multer from "multer";
 import AdmZip from "adm-zip";
 import { eq, sql, inArray } from "drizzle-orm";
+import { z } from "zod/v4";
 import { db, essaysTable, collectionsTable } from "@workspace/db";
 import { requireAdmin, isAdminUserId } from "../middlewares/requireAdmin";
 import { parseMarkdown, type ParsedMarkdown } from "../lib/markdownParser";
+
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const collectionCreateSchema = z.object({
+  slug: z
+    .string()
+    .min(1)
+    .max(120)
+    .regex(SLUG_REGEX, "slug deve conter apenas letras minúsculas, números e hífens"),
+  titleZh: z.string().min(1).max(200),
+  titlePt: z.string().min(1).max(200),
+  titleEn: z.string().max(200).nullable().optional(),
+  year: z.number().int().min(1800).max(2100),
+  volumeNumber: z.number().int().min(1).max(99),
+  characteristics: z.string().min(1),
+  isPoeticCollection: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).max(9999),
+});
+
+const collectionUpdateSchema = collectionCreateSchema.partial().omit({ slug: true });
 
 const router: IRouter = Router();
 const upload = multer({
@@ -701,6 +722,156 @@ Tradução em português.
 ## translation-notes
 Notas do tradutor (opcional).
 `;
+
+router.get(
+  "/admin/collections",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const collections = await db
+      .select()
+      .from(collectionsTable)
+      .orderBy(collectionsTable.sortOrder);
+
+    const counts = await db
+      .select({
+        slug: essaysTable.collectionSlug,
+        count: sql<number>`COUNT(*)::int`,
+      })
+      .from(essaysTable)
+      .groupBy(essaysTable.collectionSlug);
+
+    const countMap = new Map(counts.map((c) => [c.slug, c.count]));
+    const result = collections.map((c) => ({
+      ...c,
+      essayCount: countMap.get(c.slug) ?? 0,
+    }));
+    res.json(result);
+  },
+);
+
+router.get(
+  "/admin/collections/:slug",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const [collection] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, String(req.params["slug"])));
+    if (!collection) {
+      res.status(404).json({ error: "Coleção não encontrada" });
+      return;
+    }
+    res.json(collection);
+  },
+);
+
+router.post(
+  "/admin/collections",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = collectionCreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" });
+      return;
+    }
+    const data = parsed.data;
+    const [existing] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, data.slug));
+    if (existing) {
+      res.status(409).json({ error: `Já existe uma coleção com o slug "${data.slug}"` });
+      return;
+    }
+    const [created] = await db
+      .insert(collectionsTable)
+      .values({
+        slug: data.slug,
+        titleZh: data.titleZh,
+        titlePt: data.titlePt,
+        titleEn: data.titleEn ?? null,
+        year: data.year,
+        volumeNumber: data.volumeNumber,
+        characteristics: data.characteristics,
+        isPoeticCollection: data.isPoeticCollection ?? false,
+        sortOrder: data.sortOrder,
+        essayCount: 0,
+      })
+      .returning();
+    res.status(201).json(created);
+  },
+);
+
+router.patch(
+  "/admin/collections/:slug",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const slug = String(req.params["slug"]);
+    const parsed = collectionUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Dados inválidos" });
+      return;
+    }
+    const updates = parsed.data;
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: "Nada para atualizar" });
+      return;
+    }
+    const [existing] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, slug));
+    if (!existing) {
+      res.status(404).json({ error: "Coleção não encontrada" });
+      return;
+    }
+    await db
+      .update(collectionsTable)
+      .set(updates)
+      .where(eq(collectionsTable.slug, slug));
+
+    if (updates.volumeNumber !== undefined && updates.volumeNumber !== existing.volumeNumber) {
+      await db
+        .update(essaysTable)
+        .set({ volumeNumber: updates.volumeNumber })
+        .where(eq(essaysTable.collectionSlug, slug));
+    }
+
+    const [updated] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, slug));
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/admin/collections/:slug",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const slug = String(req.params["slug"]);
+    const [existing] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, slug));
+    if (!existing) {
+      res.status(404).json({ error: "Coleção não encontrada" });
+      return;
+    }
+    const [{ count }] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(essaysTable)
+      .where(eq(essaysTable.collectionSlug, slug));
+    if (count > 0) {
+      res.status(409).json({
+        error: `Não é possível excluir: ${count} ensaio(s) ainda usam esta coleção.`,
+      });
+      return;
+    }
+    await db.delete(collectionsTable).where(eq(collectionsTable.slug, slug));
+    res.json({ success: true });
+  },
+);
 
 router.get("/admin/template.md", requireAdmin, (_req, res): void => {
   res.type("text/markdown; charset=utf-8");

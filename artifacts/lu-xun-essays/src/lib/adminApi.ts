@@ -89,6 +89,34 @@ export interface ParsedMarkdown {
   };
 }
 
+export interface AdminCollection {
+  id: number;
+  slug: string;
+  titleZh: string;
+  titlePt: string;
+  titleEn: string | null;
+  year: number;
+  volumeNumber: number;
+  essayCount: number;
+  characteristics: string;
+  isPoeticCollection: boolean;
+  sortOrder: number;
+}
+
+export interface AdminCollectionInput {
+  slug: string;
+  titleZh: string;
+  titlePt: string;
+  titleEn?: string | null;
+  year: number;
+  volumeNumber: number;
+  characteristics: string;
+  isPoeticCollection?: boolean;
+  sortOrder: number;
+}
+
+export type AdminCollectionPatch = Partial<Omit<AdminCollectionInput, "slug">>;
+
 export const adminApi = {
   me: () => request<AdminMe>("/admin/me"),
   list: () => request<AdminEssayRow[]>("/admin/essays"),
@@ -112,6 +140,26 @@ export const adminApi = {
       body: fd,
     });
   },
+  listCollections: () => request<AdminCollection[]>("/admin/collections"),
+  getCollection: (slug: string) =>
+    request<AdminCollection>(`/admin/collections/${encodeURIComponent(slug)}`),
+  createCollection: (body: AdminCollectionInput) =>
+    request<AdminCollection>("/admin/collections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  updateCollection: (slug: string, body: AdminCollectionPatch) =>
+    request<AdminCollection>(`/admin/collections/${encodeURIComponent(slug)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  deleteCollection: (slug: string) =>
+    request<{ success: boolean }>(
+      `/admin/collections/${encodeURIComponent(slug)}`,
+      { method: "DELETE" },
+    ),
   upload: (file: File) => {
     const fd = new FormData();
     fd.append("file", file);

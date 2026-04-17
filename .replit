@@ -38,3 +38,8 @@ externalPort = 3000
 [[ports]]
 localPort = 22682
 externalPort = 3001
+
+[userenv]
+
+[userenv.shared]
+ADMIN_REPLIT_USER_IDS = "test-admin-001"

@@ -120,4 +120,51 @@ export const adminApi = {
       { method: "POST", body: fd },
     );
   },
+  batchPreview: (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return request<BatchPreviewResponse>("/admin/essays/batch-preview", {
+      method: "POST",
+      body: fd,
+    });
+  },
+  batchUpload: (file: File, fileNames: string[]) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("fileNames", JSON.stringify(fileNames));
+    return request<BatchUploadResponse>("/admin/essays/batch-upload", {
+      method: "POST",
+      body: fd,
+    });
+  },
 };
+
+export interface BatchEntry {
+  fileName: string;
+  status: "create" | "update" | "invalid";
+  essayId: string | null;
+  titlePt: string | null;
+  titleZh: string | null;
+  collectionSlug: string | null;
+  error: string | null;
+}
+
+export interface BatchPreviewResponse {
+  entries: BatchEntry[];
+  summary: {
+    total: number;
+    toCreate: number;
+    toUpdate: number;
+    invalid: number;
+  };
+}
+
+export interface BatchUploadResponse {
+  applied: {
+    fileName: string;
+    action: "created" | "updated";
+    essayId: string;
+  }[];
+  summary: { created: number; updated: number; skipped: number };
+  entries: BatchEntry[];
+}

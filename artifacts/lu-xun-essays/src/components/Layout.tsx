@@ -23,7 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   location.startsWith("/collections") ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                Collections
+                Coleções
               </Link>
               <Link 
                 href="/essays" 
@@ -32,7 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   location === "/essays" ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                All Essays
+                Todos os Ensaios
               </Link>
             </nav>
           </div>
@@ -48,9 +48,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="container mx-auto px-4 md:px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-muted-foreground text-sm">
             <div className="flex items-center gap-2">
               <span className="font-zh font-medium">鲁迅</span>
-              <span>— Digital Archive</span>
+              <span>— Arquivo Digital</span>
             </div>
-            <p>Critical Essays and Prose Poems (1918–1936)</p>
+            <p>Ensaios Críticos e Poemas em Prosa (1918–1936)</p>
           </div>
         </footer>
       )}

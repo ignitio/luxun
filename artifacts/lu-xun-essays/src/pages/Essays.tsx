@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { useListEssays, useListCollections } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Search, Filter, BookOpen } from "lucide-react";
+import { Search, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDebounce } from "react-use"; // We'll just use a simple state for search since useDebounce isn't available
+function difficultyLabel(level: string | null | undefined): string {
+  switch (level) {
+    case "beginner": return "iniciante";
+    case "intermediate": return "intermediário";
+    case "advanced": return "avançado";
+    default: return level || "—";
+  }
+}
 
 export function Essays() {
   const [search, setSearch] = useState("");
@@ -25,20 +32,30 @@ export function Essays() {
     query: { queryKey: ['listEssays', queryParams] }
   });
 
-  const essayTypes = ["Critical Essay", "Prose Poem", "Speech", "Preface/Afterword", "Open Letter", "Memoir", "Satire"];
+  const essayTypes = [
+    { value: "ensaio", label: "Ensaio" },
+    { value: "crônica", label: "Crônica" },
+    { value: "poesia em prosa", label: "Poesia em Prosa" },
+    { value: "discurso", label: "Discurso" },
+    { value: "prefácio/posfácio", label: "Prefácio/Posfácio" },
+    { value: "carta aberta", label: "Carta Aberta" },
+    { value: "memória", label: "Memória" },
+    { value: "sátira", label: "Sátira" },
+    { value: "ficção", label: "Ficção" },
+  ];
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 max-w-6xl">
       <div className="mb-12">
         <h1 className="font-zh text-3xl text-primary mb-2">文章</h1>
-        <h2 className="font-serif text-4xl text-foreground">Archive Search</h2>
+        <h2 className="font-serif text-4xl text-foreground">Buscar no Arquivo</h2>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8 bg-card/40 p-4 border border-border/40 rounded-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search by title, themes, or content..." 
+            placeholder="Buscar por título, temas ou conteúdo..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-background border-border/60"
@@ -47,10 +64,10 @@ export function Essays() {
         <div className="flex gap-4 w-full md:w-auto">
           <Select value={collectionSlug} onValueChange={setCollectionSlug}>
             <SelectTrigger className="w-[180px] bg-background border-border/60">
-              <SelectValue placeholder="All Collections" />
+              <SelectValue placeholder="Todas as Coleções" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Collections</SelectItem>
+              <SelectItem value="all">Todas as Coleções</SelectItem>
               {collections?.map(c => (
                 <SelectItem key={c.id} value={c.slug}>{c.titlePt}</SelectItem>
               ))}
@@ -59,12 +76,12 @@ export function Essays() {
 
           <Select value={essayType} onValueChange={setEssayType}>
             <SelectTrigger className="w-[160px] bg-background border-border/60">
-              <SelectValue placeholder="All Types" />
+              <SelectValue placeholder="Todos os Tipos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">Todos os Tipos</SelectItem>
               {essayTypes.map(t => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
+                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -83,7 +100,7 @@ export function Essays() {
         ) : essays?.length === 0 ? (
           <div className="py-20 text-center text-muted-foreground">
             <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p>No essays found matching your criteria.</p>
+            <p>Nenhum ensaio encontrado com esses critérios.</p>
           </div>
         ) : (
           essays?.map((essay) => (
@@ -128,10 +145,10 @@ export function Essays() {
 
                 <div className="flex items-center md:items-end gap-3 text-xs text-muted-foreground md:flex-col md:justify-start">
                   <span className="flex items-center gap-1">
-                    Difficulty: <span className="capitalize">{essay.difficultyLevel}</span>
+                    Dificuldade: <span className="capitalize">{difficultyLabel(essay.difficultyLevel)}</span>
                   </span>
                   {essay.estimatedReadingTime && (
-                    <span>~{essay.estimatedReadingTime} min read</span>
+                    <span>~{essay.estimatedReadingTime} min de leitura</span>
                   )}
                 </div>
               </div>

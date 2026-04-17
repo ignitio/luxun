@@ -39,7 +39,7 @@ export function CollectionDetail() {
       <div className="bg-card/40 border-b border-border/40 py-12 md:py-20">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           <Link href="/collections" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8">
-            <ArrowLeft className="w-4 h-4" /> Back to Collections
+            <ArrowLeft className="w-4 h-4" /> Voltar às Coleções
           </Link>
           
           <div className="flex flex-col gap-4">
@@ -50,7 +50,7 @@ export function CollectionDetail() {
               {collection.isPoeticCollection && (
                 <>
                   <span className="w-1 h-1 rounded-full bg-primary/50" />
-                  <span className="bg-primary/10 px-2 py-0.5 rounded-sm border border-primary/20 text-xs">Poetic Collection</span>
+                  <span className="bg-primary/10 px-2 py-0.5 rounded-sm border border-primary/20 text-xs">Coleção Poética</span>
                 </>
               )}
             </div>
@@ -71,8 +71,8 @@ export function CollectionDetail() {
       {/* Essays List */}
       <div className="container mx-auto px-4 md:px-8 py-12 md:py-16 max-w-4xl">
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/20">
-          <h3 className="font-serif text-2xl text-foreground">Table of Contents</h3>
-          <span className="text-sm text-muted-foreground font-medium">{collection.essayCount} texts</span>
+          <h3 className="font-serif text-2xl text-foreground">Sumário</h3>
+          <span className="text-sm text-muted-foreground font-medium">{collection.essayCount} textos</span>
         </div>
 
         <div className="flex flex-col gap-2">

@@ -18,7 +18,7 @@ export function EssayReader() {
       <div className="h-screen w-full flex items-center justify-center bg-[#FAF8F5] dark:bg-[#1A1A1A]">
         <div className="flex flex-col items-center gap-4">
           <BookOpen className="w-8 h-8 text-primary animate-pulse" />
-          <p className="text-sm font-serif text-muted-foreground animate-pulse">Retrieving manuscript...</p>
+          <p className="text-sm font-serif text-muted-foreground animate-pulse">Recuperando o manuscrito...</p>
         </div>
       </div>
     );
@@ -31,7 +31,7 @@ export function EssayReader() {
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b border-border/40 px-4 h-14 flex items-center justify-between">
         <Link href="/essays" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
-          <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back to Archive</span>
+          <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Voltar ao Arquivo</span>
         </Link>
         <div className="text-sm font-medium opacity-50 truncate max-w-[50%]">
           {essay.collectionTitlePt} • Vol {essay.volumeNumber}
@@ -52,19 +52,19 @@ export function EssayReader() {
 
           <div className="space-y-6 text-sm">
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Publication Context</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Publicação</h4>
               <ul className="space-y-2">
                 <li className="flex gap-2">
-                  <span className="w-20 text-muted-foreground/70">Date</span>
-                  <span className="flex-1">{essay.firstPublishedDate || 'Unknown'}</span>
+                  <span className="w-20 text-muted-foreground/70">Data</span>
+                  <span className="flex-1">{essay.firstPublishedDate || 'Desconhecida'}</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="w-20 text-muted-foreground/70">Venue</span>
-                  <span className="flex-1">{essay.firstPublishedVenuePt || essay.firstPublishedVenueZh || 'Unknown'}</span>
+                  <span className="w-20 text-muted-foreground/70">Veículo</span>
+                  <span className="flex-1">{essay.firstPublishedVenuePt || essay.firstPublishedVenueZh || 'Desconhecido'}</span>
                 </li>
                 {essay.pseudonymUsed && (
                   <li className="flex gap-2">
-                    <span className="w-20 text-muted-foreground/70">Pseudonym</span>
+                    <span className="w-20 text-muted-foreground/70">Pseudônimo</span>
                     <span className="flex-1 font-zh">{essay.pseudonymUsed}</span>
                   </li>
                 )}
@@ -77,7 +77,7 @@ export function EssayReader() {
             </div>
 
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Classification</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Classificação</h4>
               <div className="flex flex-wrap gap-1.5">
                 <Badge variant="outline" className="rounded-sm bg-background/50 font-normal">{essay.essayType}</Badge>
                 {essay.genreTagsPt.map(tag => (
@@ -88,7 +88,7 @@ export function EssayReader() {
 
             {essay.themesPt && essay.themesPt.length > 0 && (
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Themes</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Temas</h4>
                 <div className="flex flex-wrap gap-x-2 gap-y-1 text-muted-foreground">
                   {essay.themesPt.join(" • ")}
                 </div>
@@ -98,7 +98,7 @@ export function EssayReader() {
             {essay.historicalContextPt && (
               <div className="pt-4 border-t border-border/40">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5" /> Historical Context
+                  <Info className="w-3.5 h-3.5" /> Contexto Histórico
                 </h4>
                 <p className="text-muted-foreground leading-relaxed text-sm">
                   {essay.historicalContextPt}
@@ -120,7 +120,7 @@ export function EssayReader() {
               </TabsList>
               
               <div className="flex items-center gap-4 text-xs text-muted-foreground hidden sm:flex">
-                {essay.wordCountPt && <span>{essay.wordCountPt} words</span>}
+                {essay.wordCountPt && <span>{essay.wordCountPt} palavras</span>}
                 {essay.estimatedReadingTime && (
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> ~{essay.estimatedReadingTime}m</span>
                 )}
@@ -134,7 +134,7 @@ export function EssayReader() {
                     {essay.contentPt ? (
                       <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentPt) }} />
                     ) : (
-                      <p className="italic text-muted-foreground">Translation not available.</p>
+                      <p className="italic text-muted-foreground">Tradução não disponível.</p>
                     )}
                   </div>
                 </TabsContent>
@@ -144,7 +144,7 @@ export function EssayReader() {
                     {essay.contentOriginalZh ? (
                       <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentOriginalZh) }} />
                     ) : (
-                      <p className="font-sans italic text-muted-foreground">Original text not available.</p>
+                      <p className="font-sans italic text-muted-foreground">Texto original não disponível.</p>
                     )}
                   </div>
                 </TabsContent>
@@ -168,14 +168,14 @@ export function EssayReader() {
                 {/* Footer Notes */}
                 <div className="mt-20 pt-8 border-t border-border/40 text-sm text-muted-foreground/80 space-y-4">
                   {essay.translatorName && (
-                    <p><strong>Translator:</strong> {essay.translatorName}</p>
+                    <p><strong>Tradutor:</strong> {essay.translatorName}</p>
                   )}
                   {essay.sourceTextEdition && (
-                    <p><strong>Source text:</strong> {essay.sourceTextEdition}</p>
+                    <p><strong>Fonte do texto:</strong> {essay.sourceTextEdition}</p>
                   )}
                   {essay.translationNotesPt && (
                     <div className="bg-card/30 p-4 rounded-sm border border-border/20 mt-4">
-                      <strong className="block mb-2 text-foreground/70">Translation Notes:</strong>
+                      <strong className="block mb-2 text-foreground/70">Notas de Tradução:</strong>
                       <p className="leading-relaxed">{essay.translationNotesPt}</p>
                     </div>
                   )}

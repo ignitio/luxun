@@ -9,10 +9,10 @@ export function Collections() {
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 max-w-5xl">
       <div className="mb-16 text-center">
         <h1 className="font-zh text-3xl text-primary mb-4">文集</h1>
-        <h2 className="font-serif text-4xl md:text-5xl text-foreground">Collections</h2>
+        <h2 className="font-serif text-4xl md:text-5xl text-foreground">Coleções</h2>
         <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">
-          Lu Xun published 17 major essay collections during his lifetime. 
-          They are presented here in chronological order of publication.
+          Lu Xun publicou 17 grandes coleções de ensaios ao longo de sua vida. 
+          Elas estão apresentadas aqui em ordem cronológica de publicação.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export function Collections() {
                     Volume {collection.volumeNumber}
                   </span>
                   <span className="mt-auto pt-4 text-xs text-muted-foreground">
-                    {collection.essayCount} Essays
+                    {collection.essayCount} Ensaios
                   </span>
                 </div>
                 
@@ -68,7 +68,7 @@ export function Collections() {
                   {collection.isPoeticCollection && (
                     <div className="mt-4">
                       <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs rounded-sm border border-primary/20">
-                        Prose Poetry
+                        Poesia em Prosa
                       </span>
                     </div>
                   )}

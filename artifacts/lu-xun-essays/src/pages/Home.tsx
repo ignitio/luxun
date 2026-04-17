@@ -24,8 +24,8 @@ export function Home() {
           </div>
           
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
-            A digital archive of critical essays and prose poems (1918–1936). 
-            Bilingual Portuguese and Chinese editions, annotated for scholarly reading.
+            Um arquivo digital de ensaios críticos e poemas em prosa (1918–1936). 
+            Edições bilíngues em português e chinês, anotadas para leitura acadêmica.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
@@ -33,13 +33,13 @@ export function Home() {
               href="/collections" 
               className="inline-flex h-12 items-center justify-center rounded-sm bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
             >
-              Browse Collections
+              Explorar Coleções
             </Link>
             <Link 
               href="/essays" 
               className="inline-flex h-12 items-center justify-center rounded-sm border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              Search Archive
+              Buscar no Arquivo
             </Link>
           </div>
         </div>
@@ -59,19 +59,19 @@ export function Home() {
             <>
               <div className="flex flex-col items-center text-center gap-2">
                 <span className="text-4xl md:text-5xl font-serif text-primary">{stats.totalEssays}</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Essays</span>
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Ensaios</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <span className="text-4xl md:text-5xl font-serif text-primary">{stats.totalCollections}</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Collections</span>
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Coleções</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <span className="text-4xl md:text-5xl font-serif text-primary">{stats.yearRange}</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Years Active</span>
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Anos de Atividade</span>
               </div>
               <div className="flex flex-col items-center text-center gap-2">
                 <span className="text-4xl md:text-5xl font-serif text-primary">{stats.totalPseudonyms}</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Pseudonyms</span>
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Pseudônimos</span>
               </div>
             </>
           ) : null}
@@ -83,10 +83,10 @@ export function Home() {
         <div className="flex items-end justify-between mb-12">
           <div>
             <h2 className="font-zh text-2xl text-primary mb-2">精选篇目</h2>
-            <h3 className="font-serif text-3xl">Featured Reading</h3>
+            <h3 className="font-serif text-3xl">Leituras em Destaque</h3>
           </div>
           <Link href="/essays" className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            View all essays <ArrowRight className="w-4 h-4" />
+            Ver todos os ensaios <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -139,7 +139,7 @@ export function Home() {
                     </Badge>
                     {essay.estimatedReadingTime && (
                       <span className="text-xs text-muted-foreground ml-auto">
-                        ~{essay.estimatedReadingTime} min read
+                        ~{essay.estimatedReadingTime} min de leitura
                       </span>
                     )}
                   </div>
@@ -151,7 +151,7 @@ export function Home() {
         
         <div className="mt-8 md:hidden flex justify-center">
           <Link href="/essays" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-            View all essays <ArrowRight className="w-4 h-4" />
+            Ver todos os ensaios <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>

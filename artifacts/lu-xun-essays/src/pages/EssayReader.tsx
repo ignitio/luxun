@@ -132,7 +132,7 @@ export function EssayReader() {
                 <TabsContent value="pt" className="m-0 focus-visible:outline-none">
                   <div className="prose prose-stone dark:prose-invert max-w-none font-serif text-lg leading-relaxed text-foreground/90">
                     {essay.contentPt ? (
-                      <div dangerouslySetContent={{ __html: essay.contentPt.replace(/\n/g, '<br/><br/>') }} />
+                      <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentPt) }} />
                     ) : (
                       <p className="italic text-muted-foreground">Translation not available.</p>
                     )}
@@ -142,7 +142,7 @@ export function EssayReader() {
                 <TabsContent value="zh" className="m-0 focus-visible:outline-none">
                   <div className="prose prose-stone dark:prose-invert max-w-none font-zh text-xl leading-loose tracking-wide text-foreground/90">
                     {essay.contentOriginalZh ? (
-                      <div dangerouslySetContent={{ __html: essay.contentOriginalZh.replace(/\n/g, '<br/><br/>') }} />
+                      <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentOriginalZh) }} />
                     ) : (
                       <p className="font-sans italic text-muted-foreground">Original text not available.</p>
                     )}
@@ -152,7 +152,7 @@ export function EssayReader() {
                 {essay.contentModernZh && (
                   <TabsContent value="zh-mod" className="m-0 focus-visible:outline-none">
                     <div className="prose prose-stone dark:prose-invert max-w-none font-zh text-xl leading-loose tracking-wide text-foreground/90">
-                      <div dangerouslySetContent={{ __html: essay.contentModernZh.replace(/\n/g, '<br/><br/>') }} />
+                      <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentModernZh) }} />
                     </div>
                   </TabsContent>
                 )}
@@ -160,7 +160,7 @@ export function EssayReader() {
                 {essay.contentPinyin && (
                   <TabsContent value="pinyin" className="m-0 focus-visible:outline-none">
                     <div className="prose prose-stone dark:prose-invert max-w-none font-mono text-base leading-loose text-foreground/80">
-                      <div dangerouslySetContent={{ __html: essay.contentPinyin.replace(/\n/g, '<br/><br/>') }} />
+                      <div dangerouslySetInnerHTML={{ __html: renderEssayMarkup(essay.contentPinyin) }} />
                     </div>
                   </TabsContent>
                 )}
@@ -189,7 +189,31 @@ export function EssayReader() {
   );
 }
 
-// React 18 / DOM warning fix: dangerouslySetInnerHTML is correct React prop name
-function dangerouslySetContent(props: {__html: string}) {
-  return <div dangerouslySetInnerHTML={props} />;
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
+
+function renderEssayMarkup(raw: string): string {
+  const blocks = raw.split(/\n\s*\n/);
+  return blocks
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      const headerMatch = trimmed.match(/^\*\*(.+?)\*\*$/);
+      if (headerMatch) {
+        return `<h2 class="text-center text-2xl font-semibold tracking-wider my-10 text-primary/80">${escapeHtml(headerMatch[1])}</h2>`;
+      }
+      const inline = escapeHtml(trimmed)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+        .replace(/\n/g, "<br/>");
+      return `<p>${inline}</p>`;
+    })
+    .join("\n");
+}
+

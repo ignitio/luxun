@@ -1,0 +1,127 @@
+# WEBSITE SPECIFICATION: "LU XUN - Ensaios (杂文)" 
+## Digital Archive of Critical Essays & Prose Poetry (1918-1936)
+
+---
+
+## 1. CONTENT ARCHITECTURE: THE 16 COLLECTIONS
+
+Structure the database around Lu Xun's 16 essay collections (*zawen* 杂文), organized chronologically by publication date [^15^][^16^][^17^]. Each collection has a distinct political "flavor" that should be visually indicated.
+
+### Collection Database Schema
+
+| Collection (CN) | Collection (PT) | Year | Volume | Essay Count | Characteristics |
+|-----------------|-----------------|------|----------|-------------|-----------------|
+| 热风 | **Vento Quente** (Hot Wind) | 1925 | Vol. 2 | 41 | Early social critique, iconoclasm |
+| 坟 | **A Tumba** (The Grave) | 1927 | Vol. 2 | 23 | Academic essays, literature/philo |
+| 华盖集 | **O Galho da Caça** (Galloping Gables/Bad Luck) | 1926 | Vol. 3 | 31 | Debates with rivals, polemics |
+| 华盖集续编 | **O Galho da Caça (Continuação)** | 1927 | Vol. 3 | 26 | Post-3.18 Massacre, anger |
+| 而已集 | **E Só Isso** (And That's All/Only That) | 1928 | Vol. 3 | 30 | Post-1927 political purge |
+| 三闲集 | **Três Ocios** (Three Leisures) | 1932 | Vol. 4 | 34 | Marxist criticism, creationism |
+| 二心集 | **Dois Corações** (Two Hearts) | 1932 | Vol. 4 | 37 | "Bias towards the proletariat" |
+| 南腔北调集 | **Sotaques do Norte e Sul** (Mixed Accents) | 1934 | Vol. 4 | 50 | Defense against attacks, irony |
+| 伪自由书 | **Falsa Liberdade** (False Freedom) | 1933 | Vol. 5 | 43 | Shanghai press censorship era |
+| 准风月谈 | **Quase-Fengyue** (Quasi-Amorous Talks) | 1934 | Vol. 5 | 64 | "Pseudo-classical" style |
+| 花边文学 | **Literatura de Renda** (Lace Literature) | 1936 | Vol. 5 | 61 | Short press pieces, "decorative" |
+| 且介亭杂文 | **Ensaios do Pavilhão Qiejie** (Essays from Qiejie Pavilion) | 1935 | Vol. 6 | 48 | Mature late style, Shanghai isolation |
+| 且介亭杂文二集 | **Ensaios do Pavilhão Qiejie (Segundo Vol.)** | 1935 | Vol. 6 | 75 | (Approximate) |
+| 且介亭杂文末编 | **Ensaios do Pavilhão Qiejie (Final)** | 1936 | Vol. 7 | 35 | Deathbed writings, incomplete |
+| 集外集 | **Fora do Cânon** (Beyond the Canon) | 1936+ | Vol. 7 | Variable | Uncollected early pieces |
+| 集外集拾遗 | **Suplemento Fora do Cânon** | 1936+ | Vol. 7 | Variable | Posthumous discoveries |
+
+**Plus**: 
+- **野草 (Erva Selvagem)**: *Wild Grass* (1927) - 23 prose poems (散文诗). Treat as separate "Collection 17" with poetic formatting [^20^].
+
+---
+
+## 2. ESSAY-SPECIFIC CONTENT MODEL
+
+Each essay requires extensive metadata for historical context:
+
+```yaml
+---
+# Core Identification
+essay_id: lx_19330415_001
+title_pt: "Perguntas Feitas à Noite"  # Current Portuguese translation
+title_zh: "夜颂"  # Original Chinese
+title_pinyin: "Yè Sòng"  # Pinyin with tones
+original_collection: "花边文学"  # Original Chinese collection
+original_collection_pt: "Literatura de Renda"  # Portuguese collection name
+volume_number: 5
+
+# Publication Data
+first_published_date: 1933-04-15
+first_published_venue: "申报·自由谈"  # Newspaper/journal
+first_published_venue_pt: "Shenbao - Página Liberdade"
+pseudonym_used: "You Zhi"  # 游识 - Lu Xun used 100+ pseudonyms [^19^]
+pseudonym_note_pt: "Um dos mais de 100 pseudônimos usados por Lu Xun para evitar a censura da imprensa"
+
+# Content Classification
+essay_type: "crônica"  # Cronica (journalistic), ensaio acadêmico, poesia em prosa, tradução
+genre_tags_pt: ["sátira política", "crítica cultural", "resposta a detratores"]
+genre_tags_zh: ["讽刺", "时评", "论战"]
+
+# Thematic Keywords (Portuguese)
+themes_pt: 
+  - "censura à imprensa"
+  - "hipocrisia social"
+  - "modernidade vs tradição"
+  - "colaboracionismo cultural"
+
+# Historical Context (Critical for essays)
+historical_context_pt: >
+  Escrito durante a "Supressão da Imprensa de Shanghai" (1933-1934), 
+  quando o governo nacionalista exigiu pre-registro de todos os artigos. 
+  Lu Xun publicava em jornais progressistas usando pseudônimos para 
+  evitar a prisão. Esta peça responde indiretamente ao assassinato de 
+  Yang Quan, líder da Liga dos Escritores de Esquerda.
+historical_events_mentioned:
+  - event: "Matança de 18 de Março"
+    date: 1926-03-18
+    note_pt: "Massacre de estudantes em Beijing"
+  - event: "Incidente de Mukden"
+    date: 1931-09-18
+    note_pt: "Invasão japonesa da Manchúria"
+
+# Intertextual References (Lu Xun references his own works)
+references_to_own_works:
+  - work: "O Diário de um Louco"
+    note_pt: "Alude ao 'cannibalismo' metafórico da tradição confuciana"
+  - work: "E Só Isso (Prefácio)"
+    note_pt: "Cita sua própria desilusão com a revolução de 1927"
+
+# External References
+literary_references:
+  - reference: "Analectos de Confúcio"
+    quote_zh: "食不厌精"
+    note_pt: "Lu Xun satiriza a reverência textual"
+  - reference: "Guia do Alfaiate"
+    note_pt: "Literatura clássica obsoleta que ele critica"
+
+# Translation Metadata
+translator: "[Translator Name]"
+translation_date: 2025-01-15
+translation_notes_pt: >
+  O termo '颂' é ambíguo: significa tanto 'elogio' quanto 'oração'. 
+  No contexto, é irônico - 'Oração Noturna' para a hipocrisia. 
+  Optei por 'Perguntas' para manter o tom interrogativo.
+source_text_edition: "鲁迅全集 (2005版), 人民文学出版社, Vol. 5, pp. 234-236"
+
+# Technical
+word_count_pt: 1200
+word_count_zh: 800
+difficulty_level: "advanced"  # For language learners
+estimated_reading_time: 6  # minutes
+---
+
+# Main Content Body (Markdown)
+
+**Chinese Text Block** (Optional display)
+> 爱夜的人，也不但是孤独者，有闲者，不能战斗者，怕光明者；...
+
+**Portuguese Translation**
+As pessoas que amam a noite não são apenas solitárias, ociosas, 
+incapazes de lutar ou que temem a luz...
+
+**Footnotes**
+[^1]: Explicação sobre o pseudônimo "You Zhi" (游识)...
+[^2]: Contexto sobre o jornal "Shenbao"...

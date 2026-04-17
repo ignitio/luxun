@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Lu Xun Essays Digital Archive API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: collections
+    description: Essay collection operations
+  - name: essays
+    description: Essay operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,165 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [collections]
+      summary: List all collections
+      description: Returns all 17 Lu Xun essay collections in chronological order
+      responses:
+        "200":
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+
+  /collections/{slug}:
+    get:
+      operationId: getCollection
+      tags: [collections]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Get a single collection
+      responses:
+        "200":
+          description: Collection details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /collections/{slug}/essays:
+    get:
+      operationId: listEssaysByCollection
+      tags: [essays]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: List essays in a collection
+      responses:
+        "200":
+          description: List of essays in the collection
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EssaySummary"
+        "404":
+          description: Collection not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /essays:
+    get:
+      operationId: listEssays
+      tags: [essays]
+      summary: List all essays
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Full-text search across title, themes, content
+        - name: collectionSlug
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: essayType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of essays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EssaySummary"
+
+  /essays/{essayId}:
+    get:
+      operationId: getEssay
+      tags: [essays]
+      parameters:
+        - name: essayId
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Get essay details including full content
+      responses:
+        "200":
+          description: Essay details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Essay"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /essays/featured:
+    get:
+      operationId: getFeaturedEssays
+      tags: [essays]
+      summary: Get featured/highlighted essays for homepage
+      responses:
+        "200":
+          description: Featured essays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EssaySummary"
+
+  /stats:
+    get:
+      operationId: getArchiveStats
+      tags: [essays]
+      summary: Get archive statistics (total essays, collections, etc.)
+      responses:
+        "200":
+          description: Archive statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +197,241 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Collection:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        titleZh:
+          type: string
+        titlePt:
+          type: string
+        titleEn:
+          type: string
+        year:
+          type: integer
+        volumeNumber:
+          type: integer
+        essayCount:
+          type: integer
+        characteristics:
+          type: string
+        isPoeticCollection:
+          type: boolean
+          description: True for Wild Grass (野草) prose poems
+        sortOrder:
+          type: integer
+      required:
+        - id
+        - slug
+        - titleZh
+        - titlePt
+        - year
+        - volumeNumber
+        - essayCount
+        - characteristics
+        - isPoeticCollection
+        - sortOrder
+
+    EssaySummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        essayId:
+          type: string
+        titlePt:
+          type: string
+        titleZh:
+          type: string
+        titlePinyin:
+          type: string
+        collectionSlug:
+          type: string
+        collectionTitlePt:
+          type: string
+        firstPublishedDate:
+          type: string
+          nullable: true
+        firstPublishedVenuePt:
+          type: string
+          nullable: true
+        pseudonymUsed:
+          type: string
+          nullable: true
+        essayType:
+          type: string
+        genreTagsPt:
+          type: array
+          items:
+            type: string
+        difficultyLevel:
+          type: string
+        estimatedReadingTime:
+          type: integer
+          nullable: true
+        wordCountPt:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - essayId
+        - titlePt
+        - titleZh
+        - collectionSlug
+        - collectionTitlePt
+        - essayType
+        - genreTagsPt
+        - difficultyLevel
+
+    Essay:
+      type: object
+      properties:
+        id:
+          type: integer
+        essayId:
+          type: string
+        titlePt:
+          type: string
+        titleZh:
+          type: string
+        titlePinyin:
+          type: string
+        collectionSlug:
+          type: string
+        collectionTitleZh:
+          type: string
+        collectionTitlePt:
+          type: string
+        volumeNumber:
+          type: integer
+        firstPublishedDate:
+          type: string
+          nullable: true
+        firstPublishedVenueZh:
+          type: string
+          nullable: true
+        firstPublishedVenuePt:
+          type: string
+          nullable: true
+        pseudonymUsed:
+          type: string
+          nullable: true
+        pseudonymNotePt:
+          type: string
+          nullable: true
+        essayType:
+          type: string
+        genreTagsPt:
+          type: array
+          items:
+            type: string
+        genreTagsZh:
+          type: array
+          items:
+            type: string
+        themesPt:
+          type: array
+          items:
+            type: string
+        historicalContextPt:
+          type: string
+          nullable: true
+        contentOriginalZh:
+          type: string
+          nullable: true
+        contentModernZh:
+          type: string
+          nullable: true
+        contentPinyin:
+          type: string
+          nullable: true
+        contentPt:
+          type: string
+          nullable: true
+        translatorName:
+          type: string
+          nullable: true
+        translationNotesPt:
+          type: string
+          nullable: true
+        sourceTextEdition:
+          type: string
+          nullable: true
+        difficultyLevel:
+          type: string
+        estimatedReadingTime:
+          type: integer
+          nullable: true
+        wordCountPt:
+          type: integer
+          nullable: true
+        wordCountZh:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - essayId
+        - titlePt
+        - titleZh
+        - collectionSlug
+        - collectionTitlePt
+        - volumeNumber
+        - essayType
+        - genreTagsPt
+        - genreTagsZh
+        - themesPt
+        - difficultyLevel
+
+    ArchiveStats:
+      type: object
+      properties:
+        totalEssays:
+          type: integer
+        totalCollections:
+          type: integer
+        yearRange:
+          type: string
+        totalPseudonyms:
+          type: integer
+        essaysByType:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              count:
+                type: integer
+            required:
+              - type
+              - count
+        essaysByVolume:
+          type: array
+          items:
+            type: object
+            properties:
+              volume:
+                type: integer
+              count:
+                type: integer
+            required:
+              - volume
+              - count
+      required:
+        - totalEssays
+        - totalCollections
+        - yearRange
+        - totalPseudonyms
+        - essaysByType
+        - essaysByVolume

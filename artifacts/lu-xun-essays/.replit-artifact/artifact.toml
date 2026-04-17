@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Lu Xun — Ensaios (杂文)"
+version = "1.0.0"
+id = "artifacts/lu-xun-essays"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22681
+
+[services.development]
+run = "pnpm --filter @workspace/lu-xun-essays run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lu-xun-essays", "run", "build" ]
+publicDir = "artifacts/lu-xun-essays/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22681"
+BASE_PATH = "/"

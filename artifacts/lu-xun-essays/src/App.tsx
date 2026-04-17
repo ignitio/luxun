@@ -15,6 +15,7 @@ import { AdminLogin } from "@/pages/AdminLogin";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AdminUpload } from "@/pages/AdminUpload";
 import { AdminEdit } from "@/pages/AdminEdit";
+import { AdminCreate } from "@/pages/AdminCreate";
 import { AdminCollections } from "@/pages/AdminCollections";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/admin" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/upload" component={AdminUpload} />
+      <Route path="/admin/essays/new" component={AdminCreate} />
       <Route path="/admin/essays/:essayId/edit" component={AdminEdit} />
       <Route path="/admin/collections" component={AdminCollections} />
       <Route component={NotFound} />

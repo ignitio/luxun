@@ -25,7 +25,13 @@ pnpm --filter @workspace/db run push-force        # Force push (destructive)
 pnpm --filter @workspace/api-spec run codegen
 ```
 
-There are no test or lint scripts — TypeScript strict mode is the primary correctness check.
+E2E tests use Playwright (`pnpm test`). TypeScript strict mode is the primary correctness check for logic.
+
+```bash
+# E2E tests (both dev servers must be running, or let Playwright start them)
+pnpm test          # Run all tests headless
+pnpm test:ui       # Open Playwright UI
+```
 
 ## Architecture
 
@@ -47,7 +53,11 @@ lib/
 
 **Admin content flow**: Upload `.md` files (YAML frontmatter + `## zh-original` / `## pt` / etc. H2 sections) → `markdownParser.ts` → upsert essay → recalculate collection `essayCount`.
 
-**Auth**: Replit OIDC (openid-client). Session cookie + `requireAdmin` middleware gates all `/api/admin/*` routes. Admin users are identified by `ADMIN_REPLIT_USER_IDS` (CSV env var of Replit user IDs).
+**Admin auth**: `POST /api/admin-login` with `{username, password}` validated against `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars. On success a session is created (stored in the `sessions` DB table) and a `sid` cookie is set. `requireAdmin` middleware checks that `req.user.id` is in `ADMIN_REPLIT_USER_IDS` — set this to the same value as `ADMIN_USERNAME`. Session cookie is `secure: false` in development and `secure: true` in production.
+
+**Dev proxy**: `artifacts/lu-xun-essays/vite.config.ts` proxies `/api/*` to `http://localhost:${API_PORT||8080}` so both servers can run on separate ports during development.
+
+**Production static serving**: `artifacts/api-server/src/app.ts` serves the built frontend (`artifacts/lu-xun-essays/dist/public/`) as static files when `NODE_ENV=production`, making the whole app reachable from a single origin. The SPA fallback (`*path → index.html`) is registered after all `/api` routes.
 
 ## Key Conventions
 
@@ -61,9 +71,9 @@ lib/
 **Backend** (`artifacts/api-server`):
 - `DATABASE_URL` — PostgreSQL connection string
 - `PORT` — HTTP port
-- `REPL_ID` — Replit OIDC client ID
-- `ISSUER_URL` — Replit OIDC issuer (default: `https://replit.com/oidc`)
-- `ADMIN_REPLIT_USER_IDS` — CSV of admin Replit user IDs
+- `ADMIN_USERNAME` — admin login username (default: `luojie`)
+- `ADMIN_PASSWORD` — admin login password (default: `luxun`)
+- `ADMIN_REPLIT_USER_IDS` — must equal `ADMIN_USERNAME` (used by `requireAdmin` to authorise the session)
 
 **Frontend** (`artifacts/lu-xun-essays`):
 - `PORT` — Vite dev server port

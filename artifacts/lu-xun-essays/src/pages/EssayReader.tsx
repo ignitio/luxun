@@ -63,17 +63,19 @@ export function EssayReader() {
                   <span className="flex-1">{essay.firstPublishedVenuePt || essay.firstPublishedVenueZh || 'Desconhecido'}</span>
                 </li>
                 {essay.pseudonymUsed && (
-                  <li className="flex gap-2">
-                    <span className="w-20 text-muted-foreground/70">Pseudônimo</span>
-                    <span className="flex-1 font-zh">{essay.pseudonymUsed}</span>
+                  <li className="flex flex-col gap-1">
+                    <div className="flex gap-2">
+                      <span className="w-20 text-muted-foreground/70">Pseudônimo</span>
+                      <span className="flex-1 font-zh">{essay.pseudonymUsed}</span>
+                    </div>
+                    {essay.pseudonymNotePt && (
+                      <p className="ml-[5.5rem] text-xs italic text-muted-foreground border-l-2 border-primary/20 pl-3">
+                        {essay.pseudonymNotePt}
+                      </p>
+                    )}
                   </li>
                 )}
               </ul>
-              {essay.pseudonymNotePt && (
-                <p className="mt-2 text-xs italic text-muted-foreground border-l-2 border-primary/20 pl-3">
-                  {essay.pseudonymNotePt}
-                </p>
-              )}
             </div>
 
             <div>

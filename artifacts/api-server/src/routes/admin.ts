@@ -581,6 +581,100 @@ router.post(
   },
 );
 
+router.post(
+  "/admin/essays",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const body = req.body as Record<string, unknown>;
+    const essayId = typeof body.essayId === "string" ? body.essayId.trim() : "";
+    const titlePt = typeof body.titlePt === "string" ? body.titlePt.trim() : "";
+    const titleZh = typeof body.titleZh === "string" ? body.titleZh.trim() : "";
+    const collectionSlug =
+      typeof body.collectionSlug === "string" ? body.collectionSlug.trim() : "";
+
+    if (!essayId || !titlePt || !titleZh || !collectionSlug) {
+      res
+        .status(400)
+        .json({ error: "Campos obrigatórios: essayId, titlePt, titleZh, collectionSlug" });
+      return;
+    }
+
+    const [existing] = await db
+      .select()
+      .from(essaysTable)
+      .where(eq(essaysTable.essayId, essayId));
+    if (existing) {
+      res.status(409).json({ error: `Ensaio já existe: ${essayId}` });
+      return;
+    }
+
+    const [collection] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.slug, collectionSlug));
+    if (!collection) {
+      res.status(400).json({ error: `Coleção desconhecida: ${collectionSlug}` });
+      return;
+    }
+
+    const str = (v: unknown): string | null =>
+      typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
+    const arr = (v: unknown): string[] =>
+      Array.isArray(v) ? (v as string[]).filter((s) => typeof s === "string") : [];
+
+    await db.insert(essaysTable).values({
+      essayId,
+      titlePt,
+      titleZh,
+      titlePinyin: str(body.titlePinyin),
+      collectionSlug,
+      volumeNumber: collection.volumeNumber,
+      firstPublishedDate: str(body.firstPublishedDate),
+      firstPublishedVenuePt: str(body.firstPublishedVenuePt),
+      firstPublishedVenueZh: str(body.firstPublishedVenueZh),
+      pseudonymUsed: str(body.pseudonymUsed),
+      pseudonymNotePt: str(body.pseudonymNotePt),
+      essayType: str(body.essayType) ?? "ensaio",
+      genreTagsPt: arr(body.genreTagsPt),
+      genreTagsZh: arr(body.genreTagsZh),
+      themesPt: arr(body.themesPt),
+      historicalContextPt: str(body.historicalContextPt),
+      contentOriginalZh: str(body.contentOriginalZh),
+      contentModernZh: str(body.contentModernZh),
+      contentPinyin: str(body.contentPinyin),
+      contentPt: str(body.contentPt),
+      translatorName: str(body.translatorName),
+      translationNotesPt: str(body.translationNotesPt),
+      sourceTextEdition: str(body.sourceTextEdition),
+      difficultyLevel: str(body.difficultyLevel) ?? "intermediate",
+      isFeatured:
+        typeof body.isFeatured === "boolean" ? body.isFeatured : false,
+      estimatedReadingTime: null,
+      wordCountPt: null,
+      wordCountZh: null,
+    });
+
+    await db
+      .update(collectionsTable)
+      .set({
+        essayCount: sql`(SELECT COUNT(*)::int FROM ${essaysTable} WHERE ${essaysTable.collectionSlug} = ${collectionSlug})`,
+      })
+      .where(eq(collectionsTable.slug, collectionSlug));
+
+    const [created] = await db
+      .select()
+      .from(essaysTable)
+      .where(eq(essaysTable.essayId, essayId));
+
+    res.status(201).json({
+      ...created,
+      firstPublishedDate: created.firstPublishedDate
+        ? created.firstPublishedDate.toString()
+        : null,
+    });
+  },
+);
+
 router.get(
   "/admin/essays/:essayId",
   requireAdmin,
@@ -623,6 +717,12 @@ router.patch(
       "sourceTextEdition",
       "genreTagsPt",
       "themesPt",
+      "historicalContextPt",
+      "contentOriginalZh",
+      "contentModernZh",
+      "contentPinyin",
+      "contentPt",
+      "translationNotesPt",
     ] as const;
     const updates: Record<string, unknown> = {};
     for (const k of allowed) {
@@ -695,6 +795,7 @@ collectionSlug: hua-gai-ji-xu-bian
 firstPublishedDate: 1926-04-01
 firstPublishedVenuePt: Yusi (Fio de Linguagem)
 pseudonymUsed: null
+pseudonymNotePt: null
 essayType: ensaio
 genreTagsPt: [memória, crítica política]
 themesPt: [violência estatal, coragem feminina]

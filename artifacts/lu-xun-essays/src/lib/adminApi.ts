@@ -70,6 +70,38 @@ export interface AdminEssayDetail {
   sourceTextEdition: string | null;
   genreTagsPt: string[];
   themesPt: string[];
+  historicalContextPt: string | null;
+  contentOriginalZh: string | null;
+  contentModernZh: string | null;
+  contentPinyin: string | null;
+  contentPt: string | null;
+  translationNotesPt: string | null;
+}
+
+export interface AdminEssayCreate {
+  essayId: string;
+  titlePt: string;
+  titleZh: string;
+  collectionSlug: string;
+  titlePinyin?: string | null;
+  firstPublishedDate?: string | null;
+  firstPublishedVenuePt?: string | null;
+  firstPublishedVenueZh?: string | null;
+  pseudonymUsed?: string | null;
+  pseudonymNotePt?: string | null;
+  essayType?: string;
+  difficultyLevel?: string;
+  isFeatured?: boolean;
+  translatorName?: string | null;
+  sourceTextEdition?: string | null;
+  genreTagsPt?: string[];
+  themesPt?: string[];
+  historicalContextPt?: string | null;
+  contentOriginalZh?: string | null;
+  contentModernZh?: string | null;
+  contentPinyin?: string | null;
+  contentPt?: string | null;
+  translationNotesPt?: string | null;
 }
 
 export interface ParsedMarkdown {
@@ -122,6 +154,12 @@ export const adminApi = {
   list: () => request<AdminEssayRow[]>("/admin/essays"),
   get: (essayId: string) =>
     request<AdminEssayDetail>(`/admin/essays/${encodeURIComponent(essayId)}`),
+  create: (body: AdminEssayCreate) =>
+    request<AdminEssayDetail>("/admin/essays", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
   patch: (essayId: string, body: Partial<AdminEssayDetail>) =>
     request<AdminEssayDetail>(`/admin/essays/${encodeURIComponent(essayId)}`, {
       method: "PATCH",

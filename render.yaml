@@ -20,11 +20,7 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: ISSUER_URL
-        value: https://replit.com/oidc
       - key: DATABASE_URL
-        sync: false
-      - key: REPL_ID
         sync: false
       - key: ADMIN_REPLIT_USER_IDS
         sync: false

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useRoute } from "wouter";
-import { adminApi, type AdminEssayDetail } from "@/lib/adminApi";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { adminApi, type AdminEssayCreate } from "@/lib/adminApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,23 +11,38 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdminGuard } from "@/hooks/use-admin-guard";
 import { ArrowLeft } from "lucide-react";
 
-export function AdminEdit() {
+const EMPTY: AdminEssayCreate = {
+  essayId: "",
+  titlePt: "",
+  titleZh: "",
+  collectionSlug: "",
+  titlePinyin: null,
+  firstPublishedDate: null,
+  firstPublishedVenuePt: null,
+  firstPublishedVenueZh: null,
+  pseudonymUsed: null,
+  pseudonymNotePt: null,
+  essayType: "ensaio",
+  difficultyLevel: "intermediate",
+  isFeatured: false,
+  translatorName: null,
+  sourceTextEdition: null,
+  genreTagsPt: [],
+  themesPt: [],
+  historicalContextPt: null,
+  contentOriginalZh: null,
+  contentModernZh: null,
+  contentPinyin: null,
+  contentPt: null,
+  translationNotesPt: null,
+};
+
+export function AdminCreate() {
   const guard = useAdminGuard();
-  const [, params] = useRoute("/admin/essays/:essayId/edit");
-  const essayId = params?.essayId;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [essay, setEssay] = useState<AdminEssayDetail | null>(null);
+  const [form, setForm] = useState<AdminEssayCreate>({ ...EMPTY });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!essayId || !guard.isAdmin) return;
-    adminApi
-      .get(essayId)
-      .then(setEssay)
-      .catch((e) => setError((e as Error).message));
-  }, [essayId, guard.isAdmin]);
 
   if (guard.isLoading || !guard.isAuthenticated) {
     return <div className="container mx-auto px-4 md:px-8 py-20">Carregando...</div>;
@@ -43,43 +58,27 @@ export function AdminEdit() {
     );
   }
 
-  const update = <K extends keyof AdminEssayDetail>(key: K, value: AdminEssayDetail[K]) => {
-    setEssay((prev) => (prev ? { ...prev, [key]: value } : prev));
+  const update = <K extends keyof AdminEssayCreate>(key: K, value: AdminEssayCreate[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const onSave = async () => {
-    if (!essay || !essayId) return;
+    if (!form.essayId || !form.titlePt || !form.titleZh || !form.collectionSlug) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "ID do ensaio, Título PT, Título ZH e Coleção são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
     setBusy(true);
     try {
-      await adminApi.patch(essayId, {
-        titlePt: essay.titlePt,
-        titleZh: essay.titleZh,
-        titlePinyin: essay.titlePinyin,
-        collectionSlug: essay.collectionSlug,
-        firstPublishedDate: essay.firstPublishedDate,
-        firstPublishedVenuePt: essay.firstPublishedVenuePt,
-        firstPublishedVenueZh: essay.firstPublishedVenueZh,
-        pseudonymUsed: essay.pseudonymUsed,
-        pseudonymNotePt: essay.pseudonymNotePt,
-        essayType: essay.essayType,
-        difficultyLevel: essay.difficultyLevel,
-        isFeatured: essay.isFeatured,
-        translatorName: essay.translatorName,
-        sourceTextEdition: essay.sourceTextEdition,
-        genreTagsPt: essay.genreTagsPt,
-        themesPt: essay.themesPt,
-        historicalContextPt: essay.historicalContextPt,
-        contentOriginalZh: essay.contentOriginalZh,
-        contentModernZh: essay.contentModernZh,
-        contentPinyin: essay.contentPinyin,
-        contentPt: essay.contentPt,
-        translationNotesPt: essay.translationNotesPt,
-      });
-      toast({ title: "Ensaio atualizado" });
+      await adminApi.create(form);
+      toast({ title: "Ensaio criado com sucesso" });
       setLocation("/admin/dashboard");
     } catch (e) {
       toast({
-        title: "Erro ao salvar",
+        title: "Erro ao criar ensaio",
         description: (e as Error).message,
         variant: "destructive",
       });
@@ -88,17 +87,6 @@ export function AdminEdit() {
     }
   };
 
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-10">
-        <p className="text-destructive">{error}</p>
-      </div>
-    );
-  }
-  if (!essay) {
-    return <div className="container mx-auto px-4 py-10">Carregando…</div>;
-  }
-
   return (
     <div className="container mx-auto px-4 md:px-8 py-10 max-w-3xl space-y-6">
       <Link href="/admin/dashboard">
@@ -106,128 +94,126 @@ export function AdminEdit() {
           <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
         </Button>
       </Link>
-      <h1 className="font-serif text-3xl font-bold">Editar ensaio</h1>
-      <p className="text-sm text-muted-foreground">{essay.essayId}</p>
+      <h1 className="font-serif text-3xl font-bold">Novo ensaio</h1>
 
       <Card className="p-6 space-y-4">
-        <Field label="Título PT">
+        <Field label="ID do ensaio *">
           <Input
-            value={essay.titlePt}
-            onChange={(e) => update("titlePt", e.target.value)}
-            data-testid="input-titlePt"
+            value={form.essayId}
+            onChange={(e) => update("essayId", e.target.value)}
+            placeholder="lx_YYYYMMDD_001"
           />
         </Field>
-        <Field label="Título ZH">
+        <Field label="Título PT *">
           <Input
-            value={essay.titleZh}
+            value={form.titlePt}
+            onChange={(e) => update("titlePt", e.target.value)}
+          />
+        </Field>
+        <Field label="Título ZH *">
+          <Input
+            className="font-zh"
+            value={form.titleZh}
             onChange={(e) => update("titleZh", e.target.value)}
           />
         </Field>
         <Field label="Pinyin">
           <Input
-            value={essay.titlePinyin ?? ""}
+            value={form.titlePinyin ?? ""}
             onChange={(e) => update("titlePinyin", e.target.value || null)}
           />
         </Field>
-        <Field label="Coleção (slug)">
+        <Field label="Coleção (slug) *">
           <Input
-            value={essay.collectionSlug}
+            value={form.collectionSlug}
             onChange={(e) => update("collectionSlug", e.target.value)}
+            placeholder="hua-gai-ji-xu-bian"
           />
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Tipo de ensaio">
             <Input
-              value={essay.essayType}
-              onChange={(e) => update("essayType", e.target.value)}
+              value={form.essayType ?? ""}
+              onChange={(e) => update("essayType", e.target.value || "ensaio")}
             />
           </Field>
           <Field label="Dificuldade">
             <Input
-              value={essay.difficultyLevel}
-              onChange={(e) => update("difficultyLevel", e.target.value)}
+              value={form.difficultyLevel ?? ""}
+              onChange={(e) => update("difficultyLevel", e.target.value || "intermediate")}
             />
           </Field>
         </div>
         <Field label="Data de publicação (YYYY-MM-DD)">
           <Input
-            value={essay.firstPublishedDate ?? ""}
+            value={form.firstPublishedDate ?? ""}
             onChange={(e) => update("firstPublishedDate", e.target.value || null)}
           />
         </Field>
         <Field label="Veículo (PT)">
           <Input
-            value={essay.firstPublishedVenuePt ?? ""}
-            onChange={(e) =>
-              update("firstPublishedVenuePt", e.target.value || null)
-            }
+            value={form.firstPublishedVenuePt ?? ""}
+            onChange={(e) => update("firstPublishedVenuePt", e.target.value || null)}
           />
         </Field>
         <Field label="Pseudônimo">
           <Input
-            value={essay.pseudonymUsed ?? ""}
+            value={form.pseudonymUsed ?? ""}
             onChange={(e) => update("pseudonymUsed", e.target.value || null)}
           />
         </Field>
         <Field label="Nota sobre o pseudônimo (PT)">
           <Textarea
-            value={essay.pseudonymNotePt ?? ""}
+            value={form.pseudonymNotePt ?? ""}
             onChange={(e) => update("pseudonymNotePt", e.target.value || null)}
             rows={3}
           />
         </Field>
         <Field label="Tradutor">
           <Input
-            value={essay.translatorName ?? ""}
+            value={form.translatorName ?? ""}
             onChange={(e) => update("translatorName", e.target.value || null)}
           />
         </Field>
         <Field label="Edição-fonte">
           <Input
-            value={essay.sourceTextEdition ?? ""}
+            value={form.sourceTextEdition ?? ""}
             onChange={(e) => update("sourceTextEdition", e.target.value || null)}
           />
         </Field>
         <Field label="Tags de gênero (PT, separadas por vírgula)">
           <Textarea
-            value={essay.genreTagsPt.join(", ")}
+            value={(form.genreTagsPt ?? []).join(", ")}
             onChange={(e) =>
               update(
                 "genreTagsPt",
-                e.target.value
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean),
+                e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
               )
             }
           />
         </Field>
         <Field label="Temas (PT, separados por vírgula)">
           <Textarea
-            value={essay.themesPt.join(", ")}
+            value={(form.themesPt ?? []).join(", ")}
             onChange={(e) =>
               update(
                 "themesPt",
-                e.target.value
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean),
+                e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
               )
             }
           />
         </Field>
         <div className="flex items-center gap-2">
           <Switch
-            checked={essay.isFeatured}
+            checked={form.isFeatured ?? false}
             onCheckedChange={(v) => update("isFeatured", v)}
-            data-testid="switch-featured"
           />
           <Label>Destaque na home</Label>
         </div>
 
         <div className="pt-4">
-          <Button onClick={onSave} disabled={busy} data-testid="button-save">
-            {busy ? "Salvando…" : "Salvar alterações"}
+          <Button onClick={onSave} disabled={busy}>
+            {busy ? "Criando…" : "Criar ensaio"}
           </Button>
         </div>
       </Card>
@@ -237,7 +223,7 @@ export function AdminEdit() {
       <Card className="p-6 space-y-4">
         <Field label="Contexto histórico (PT)">
           <Textarea
-            value={essay.historicalContextPt ?? ""}
+            value={form.historicalContextPt ?? ""}
             onChange={(e) => update("historicalContextPt", e.target.value || null)}
             rows={5}
           />
@@ -245,7 +231,7 @@ export function AdminEdit() {
         <Field label="Texto original (ZH clássico)">
           <Textarea
             className="font-zh"
-            value={essay.contentOriginalZh ?? ""}
+            value={form.contentOriginalZh ?? ""}
             onChange={(e) => update("contentOriginalZh", e.target.value || null)}
             rows={10}
           />
@@ -253,28 +239,28 @@ export function AdminEdit() {
         <Field label="Tradução moderna (ZH)">
           <Textarea
             className="font-zh"
-            value={essay.contentModernZh ?? ""}
+            value={form.contentModernZh ?? ""}
             onChange={(e) => update("contentModernZh", e.target.value || null)}
             rows={10}
           />
         </Field>
         <Field label="Pinyin">
           <Textarea
-            value={essay.contentPinyin ?? ""}
+            value={form.contentPinyin ?? ""}
             onChange={(e) => update("contentPinyin", e.target.value || null)}
             rows={10}
           />
         </Field>
         <Field label="Tradução em português (PT)">
           <Textarea
-            value={essay.contentPt ?? ""}
+            value={form.contentPt ?? ""}
             onChange={(e) => update("contentPt", e.target.value || null)}
             rows={10}
           />
         </Field>
         <Field label="Notas do tradutor (PT)">
           <Textarea
-            value={essay.translationNotesPt ?? ""}
+            value={form.translationNotesPt ?? ""}
             onChange={(e) => update("translationNotesPt", e.target.value || null)}
             rows={5}
           />
@@ -282,7 +268,7 @@ export function AdminEdit() {
 
         <div className="pt-4">
           <Button onClick={onSave} disabled={busy}>
-            {busy ? "Salvando…" : "Salvar alterações"}
+            {busy ? "Criando…" : "Criar ensaio"}
           </Button>
         </div>
       </Card>

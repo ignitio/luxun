@@ -42,4 +42,4 @@ externalPort = 3001
 [userenv]
 
 [userenv.shared]
-ADMIN_REPLIT_USER_IDS = "test-admin-001"
+ADMIN_REPLIT_USER_IDS = "test-admin-001", 	"39877121"

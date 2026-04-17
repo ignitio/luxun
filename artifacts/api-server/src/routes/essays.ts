@@ -1,6 +1,11 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, or } from "drizzle-orm";
+import { eq, ilike, and, or, isNotNull, ne, sql } from "drizzle-orm";
 import { db, essaysTable, collectionsTable } from "@workspace/db";
+
+const hasPortugueseContent = and(
+  isNotNull(essaysTable.contentPt),
+  ne(essaysTable.contentPt, ""),
+);
 import {
   ListEssaysQueryParams,
   ListEssaysResponse,
@@ -33,7 +38,7 @@ router.get("/essays/featured", async (_req, res): Promise<void> => {
     })
     .from(essaysTable)
     .innerJoin(collectionsTable, eq(essaysTable.collectionSlug, collectionsTable.slug))
-    .where(eq(essaysTable.isFeatured, true))
+    .where(and(eq(essaysTable.isFeatured, true), hasPortugueseContent))
     .limit(6);
 
   const result = featured.map((e) => ({
@@ -53,7 +58,7 @@ router.get("/essays", async (req, res): Promise<void> => {
 
   const { search, collectionSlug, essayType, difficulty } = query.data;
 
-  const conditions = [];
+  const conditions = [hasPortugueseContent];
 
   if (collectionSlug) {
     conditions.push(eq(essaysTable.collectionSlug, collectionSlug));
@@ -94,7 +99,7 @@ router.get("/essays", async (req, res): Promise<void> => {
     })
     .from(essaysTable)
     .innerJoin(collectionsTable, eq(essaysTable.collectionSlug, collectionsTable.slug))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(essaysTable.id);
 
   const result = essays.map((e) => ({
@@ -151,7 +156,7 @@ router.get("/essays/:essayId", async (req, res): Promise<void> => {
     })
     .from(essaysTable)
     .innerJoin(collectionsTable, eq(essaysTable.collectionSlug, collectionsTable.slug))
-    .where(eq(essaysTable.essayId, params.data.essayId));
+    .where(and(eq(essaysTable.essayId, params.data.essayId), hasPortugueseContent));
 
   if (!essay) {
     res.status(404).json({ error: "Essay not found" });
@@ -169,23 +174,26 @@ router.get("/essays/:essayId", async (req, res): Promise<void> => {
 });
 
 router.get("/stats", async (_req, res): Promise<void> => {
-  const sql = (await import("drizzle-orm")).sql;
-
-  const [totalEssaysRow] = await db.select({ count: sql<number>`COUNT(*)::int` }).from(essaysTable);
+  const [totalEssaysRow] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(essaysTable)
+    .where(hasPortugueseContent);
   const [totalCollectionsRow] = await db.select({ count: sql<number>`COUNT(*)::int` }).from(collectionsTable);
   const [yearRangeRow] = await db.select({
     min: sql<number>`MIN(year)::int`,
     max: sql<number>`MAX(year)::int`,
   }).from(collectionsTable);
-  const [pseudonymsRow] = await db.select({
-    count: sql<number>`COUNT(DISTINCT pseudonym_used)::int`,
-  }).from(essaysTable);
+  const [pseudonymsRow] = await db
+    .select({ count: sql<number>`COUNT(DISTINCT pseudonym_used)::int` })
+    .from(essaysTable)
+    .where(hasPortugueseContent);
 
   const essaysByTypeRaw = await db.select({
     type: essaysTable.essayType,
     count: sql<number>`COUNT(*)::int`,
   })
     .from(essaysTable)
+    .where(hasPortugueseContent)
     .groupBy(essaysTable.essayType)
     .orderBy(sql`count DESC`);
 
@@ -194,6 +202,7 @@ router.get("/stats", async (_req, res): Promise<void> => {
     count: sql<number>`COUNT(*)::int`,
   })
     .from(essaysTable)
+    .where(hasPortugueseContent)
     .groupBy(essaysTable.volumeNumber)
     .orderBy(essaysTable.volumeNumber);
 

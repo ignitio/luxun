@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and, isNotNull, ne, sql } from "drizzle-orm";
 import { db, collectionsTable, essaysTable } from "@workspace/db";
 import {
   GetCollectionParams,
@@ -9,6 +9,11 @@ import {
   ListEssaysByCollectionResponse,
 } from "@workspace/api-zod";
 
+const hasPortugueseContent = and(
+  isNotNull(essaysTable.contentPt),
+  ne(essaysTable.contentPt, ""),
+);
+
 const router: IRouter = Router();
 
 router.get("/collections", async (_req, res): Promise<void> => {
@@ -16,7 +21,23 @@ router.get("/collections", async (_req, res): Promise<void> => {
     .select()
     .from(collectionsTable)
     .orderBy(collectionsTable.sortOrder);
-  res.json(ListCollectionsResponse.parse(collections));
+
+  const counts = await db
+    .select({
+      slug: essaysTable.collectionSlug,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(essaysTable)
+    .where(hasPortugueseContent)
+    .groupBy(essaysTable.collectionSlug);
+
+  const countMap = new Map(counts.map((c) => [c.slug, c.count]));
+  const result = collections.map((c) => ({
+    ...c,
+    essayCount: countMap.get(c.slug) ?? 0,
+  }));
+
+  res.json(ListCollectionsResponse.parse(result));
 });
 
 router.get("/collections/:slug", async (req, res): Promise<void> => {
@@ -60,7 +81,7 @@ router.get("/collections/:slug/essays", async (req, res): Promise<void> => {
   const essays = await db
     .select()
     .from(essaysTable)
-    .where(eq(essaysTable.collectionSlug, params.data.slug))
+    .where(and(eq(essaysTable.collectionSlug, params.data.slug), hasPortugueseContent))
     .orderBy(essaysTable.id);
 
   const essayList = await Promise.all(

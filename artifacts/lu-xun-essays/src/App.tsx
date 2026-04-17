@@ -11,6 +11,10 @@ import { Collections } from "@/pages/Collections";
 import { CollectionDetail } from "@/pages/CollectionDetail";
 import { Essays } from "@/pages/Essays";
 import { EssayReader } from "@/pages/EssayReader";
+import { AdminLogin } from "@/pages/AdminLogin";
+import { AdminDashboard } from "@/pages/AdminDashboard";
+import { AdminUpload } from "@/pages/AdminUpload";
+import { AdminEdit } from "@/pages/AdminEdit";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +26,10 @@ function Router() {
       <Route path="/collections/:slug" component={CollectionDetail} />
       <Route path="/essays" component={Essays} />
       <Route path="/essays/:essayId" component={EssayReader} />
+      <Route path="/admin" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/upload" component={AdminUpload} />
+      <Route path="/admin/essays/:essayId/edit" component={AdminEdit} />
       <Route component={NotFound} />
     </Switch>
   );

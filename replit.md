@@ -51,5 +51,74 @@ Shared Express 5 backend with endpoints for:
 
 - `collections` table — 17 Lu Xun essay collections
 - `essays` table — individual essays with full metadata and content
+- `users` + `sessions` tables — Replit Auth session/user storage (mandatory)
+
+## Painel administrativo
+
+A rota `/admin` exibe um painel de curadoria protegido por Replit Auth.
+
+### Como conceder acesso
+Defina o secret `ADMIN_REPLIT_USER_IDS` com a lista (CSV) de IDs Replit
+autorizados — por exemplo `ADMIN_REPLIT_USER_IDS=abc123,def456`. Apenas usuários
+logados cujo `id` esteja nessa lista veem o dashboard; os demais recebem
+"Acesso negado".
+
+### Fluxos suportados
+- Listar todos os ensaios com badges 原 / 现 / 拼 / PT indicando quais versões
+  linguísticas existem.
+- Enviar arquivo `.md` para criar um novo ensaio ou completar versões de um
+  ensaio existente (upsert por `essayId`).
+- Pré-visualizar o parse antes de confirmar a publicação.
+- Editar metadados de um ensaio sem upload (`/admin/essays/:essayId/edit`).
+- Excluir um ensaio (recalcula `essayCount` da coleção).
+- Baixar um modelo Markdown comentado (`GET /api/admin/template.md`).
+
+### Formato Markdown aceito
+Frontmatter YAML obrigatório + seções H2 com slugs fixos. Apenas
+`essayId` é sempre obrigatório; para criar um ensaio novo são também exigidos
+`titlePt`, `titleZh` e `collectionSlug`. Para complementar um ensaio existente
+basta `essayId` + as seções/campos desejados — campos ausentes não sobrescrevem
+valores já gravados.
+
+```markdown
+---
+essayId: lx_19260401_001
+titleZh: 记念刘和珍君
+titlePt: Em Memória da Senhorita Liu Hezhen
+titlePinyin: Jì Niàn Liú Hé Zhēn Jūn
+collectionSlug: hua-gai-ji-xu-bian
+firstPublishedDate: 1926-04-01
+firstPublishedVenuePt: Yusi (Fio de Linguagem)
+pseudonymUsed: null
+essayType: ensaio
+genreTagsPt: [memória, crítica política, luto]
+themesPt: [violência estatal, coragem feminina]
+difficultyLevel: advanced
+isFeatured: true
+translatorName: Arquivo Lu Xun Digital
+sourceTextEdition: 鲁迅全集 (2005版), Vol. 3
+---
+
+## historical-context
+...
+
+## zh-original
+...
+
+## zh-modern
+...
+
+## pinyin
+...
+
+## pt
+...
+
+## translation-notes
+...
+```
+
+`wordCountPt`, `wordCountZh` e `estimatedReadingTime` são calculados
+automaticamente a partir das seções presentes.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

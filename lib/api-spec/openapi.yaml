@@ -14,6 +14,10 @@ tags:
     description: Essay collection operations
   - name: essays
     description: Essay operations
+  - name: Auth
+    description: Browser and mobile authentication endpoints.
+  - name: admin
+    description: Admin panel operations (curators only).
 paths:
   /healthz:
     get:
@@ -187,7 +191,350 @@ paths:
               schema:
                 $ref: "#/components/schemas/ArchiveStats"
 
+  /auth/user:
+    get:
+      tags: [Auth]
+      operationId: getCurrentAuthUser
+      summary: Get the currently authenticated user
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: Auth status resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUserEnvelope"
+
+  /login:
+    get:
+      tags: [Auth]
+      operationId: beginBrowserLogin
+      summary: Start the browser OIDC login flow
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to OIDC authorization endpoint.
+
+  /callback:
+    get:
+      tags: [Auth]
+      operationId: handleBrowserLoginCallback
+      summary: Complete the browser OIDC login flow
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: iss
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uri
+      responses:
+        "302":
+          description: Redirect after callback.
+
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the session and begin OIDC logout
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "302":
+          description: Redirect to OIDC logout URL.
+
+  /mobile-auth/token-exchange:
+    post:
+      tags: [Auth]
+      operationId: exchangeMobileAuthorizationCode
+      summary: Exchange a mobile OIDC code for a session token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileTokenExchangeRequest"
+      responses:
+        "200":
+          description: Session created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobileTokenExchangeSuccess"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Token exchange failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /mobile-auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logoutMobileSession
+      summary: Delete a mobile session token
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+      responses:
+        "200":
+          description: Logout processed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutSuccess"
+
+  /admin/me:
+    get:
+      tags: [admin]
+      operationId: getAdminMe
+      summary: Get the currently authenticated admin
+      responses:
+        "200":
+          description: Admin user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMeResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not an admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/essays/upload:
+    post:
+      tags: [admin]
+      operationId: uploadAdminEssay
+      summary: Upload a Markdown file (creates new essay or updates existing)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated existing essay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUploadResult"
+        "201":
+          description: Created new essay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUploadResult"
+        "400":
+          description: Invalid markdown or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/essays/preview:
+    post:
+      tags: [admin]
+      operationId: previewAdminEssay
+      summary: Parse a Markdown file without saving
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Parsed markdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminParsedMarkdown"
+        "400":
+          description: Invalid markdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/template.md:
+    get:
+      tags: [admin]
+      operationId: getAdminTemplate
+      summary: Download the commented Markdown template
+      responses:
+        "200":
+          description: Markdown template file
+          content:
+            text/markdown:
+              schema:
+                type: string
+
+  /admin/essays:
+    get:
+      tags: [admin]
+      operationId: listAdminEssays
+      summary: List all essays with completeness flags
+      responses:
+        "200":
+          description: List of essays with language flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminEssayRow"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not an admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/essays/{essayId}:
+    patch:
+      tags: [admin]
+      operationId: updateAdminEssay
+      parameters:
+        - name: essayId
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Update essay metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminEssayPatch"
+      responses:
+        "200":
+          description: Updated essay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminEssayDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [admin]
+      operationId: deleteAdminEssay
+      parameters:
+        - name: essayId
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Delete an essay
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteSuccess"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags: [admin]
+      operationId: getAdminEssay
+      parameters:
+        - name: essayId
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Get an essay (admin)
+      responses:
+        "200":
+          description: Essay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminEssayDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  parameters:
+    AuthorizationSessionHeader:
+      name: Authorization
+      in: header
+      required: false
+      schema:
+        type: string
+    SessionCookie:
+      name: sid
+      in: cookie
+      required: false
+      schema:
+        type: string
+
   schemas:
     HealthStatus:
       type: object
@@ -435,3 +782,266 @@ components:
         - totalPseudonyms
         - essaysByType
         - essaysByVolume
+
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id:
+          type: string
+        email:
+          type: [string, "null"]
+          format: email
+        firstName:
+          type: [string, "null"]
+        lastName:
+          type: [string, "null"]
+        profileImageUrl:
+          type: [string, "null"]
+
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/AuthUser"
+            - type: "null"
+
+    MobileTokenExchangeRequest:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        code_verifier:
+          type: string
+          minLength: 1
+        redirect_uri:
+          type: string
+          minLength: 1
+          format: uri
+        state:
+          type: string
+          minLength: 1
+        nonce:
+          type: string
+          minLength: 1
+
+    MobileTokenExchangeSuccess:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    LogoutSuccess:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
+
+    AdminMeResponse:
+      type: object
+      required: [user, isAdmin]
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        isAdmin:
+          type: boolean
+
+    AdminEssayRow:
+      type: object
+      required:
+        - essayId
+        - titlePt
+        - titleZh
+        - collectionSlug
+        - hasOriginalZh
+        - hasModernZh
+        - hasPinyin
+        - hasPt
+        - isFeatured
+      properties:
+        essayId:
+          type: string
+        titlePt:
+          type: string
+        titleZh:
+          type: string
+        titlePinyin:
+          type: [string, "null"]
+        collectionSlug:
+          type: string
+        collectionTitlePt:
+          type: [string, "null"]
+        firstPublishedDate:
+          type: [string, "null"]
+        essayType:
+          type: string
+        difficultyLevel:
+          type: string
+        hasOriginalZh:
+          type: boolean
+        hasModernZh:
+          type: boolean
+        hasPinyin:
+          type: boolean
+        hasPt:
+          type: boolean
+        isFeatured:
+          type: boolean
+
+    AdminEssayDetail:
+      type: object
+      required: [essayId, titlePt, titleZh, collectionSlug]
+      properties:
+        essayId:
+          type: string
+        titlePt:
+          type: string
+        titleZh:
+          type: string
+        titlePinyin:
+          type: [string, "null"]
+        collectionSlug:
+          type: string
+        firstPublishedDate:
+          type: [string, "null"]
+        firstPublishedVenuePt:
+          type: [string, "null"]
+        firstPublishedVenueZh:
+          type: [string, "null"]
+        pseudonymUsed:
+          type: [string, "null"]
+        pseudonymNotePt:
+          type: [string, "null"]
+        essayType:
+          type: string
+        genreTagsPt:
+          type: array
+          items:
+            type: string
+        themesPt:
+          type: array
+          items:
+            type: string
+        difficultyLevel:
+          type: string
+        isFeatured:
+          type: boolean
+        translatorName:
+          type: [string, "null"]
+        sourceTextEdition:
+          type: [string, "null"]
+        historicalContextPt:
+          type: [string, "null"]
+        translationNotesPt:
+          type: [string, "null"]
+        contentOriginalZh:
+          type: [string, "null"]
+        contentModernZh:
+          type: [string, "null"]
+        contentPinyin:
+          type: [string, "null"]
+        contentPt:
+          type: [string, "null"]
+        wordCountPt:
+          type: [integer, "null"]
+        wordCountZh:
+          type: [integer, "null"]
+        estimatedReadingTime:
+          type: [integer, "null"]
+
+    AdminEssayPatch:
+      type: object
+      properties:
+        titlePt:
+          type: string
+        titleZh:
+          type: string
+        titlePinyin:
+          type: string
+        collectionSlug:
+          type: string
+        firstPublishedDate:
+          type: string
+        firstPublishedVenuePt:
+          type: string
+        firstPublishedVenueZh:
+          type: string
+        pseudonymUsed:
+          type: string
+        pseudonymNotePt:
+          type: string
+        essayType:
+          type: string
+        difficultyLevel:
+          type: string
+        isFeatured:
+          type: boolean
+        translatorName:
+          type: string
+        sourceTextEdition:
+          type: string
+        genreTagsPt:
+          type: array
+          items:
+            type: string
+        themesPt:
+          type: array
+          items:
+            type: string
+
+    DeleteSuccess:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    AdminUploadResult:
+      type: object
+      required: [action, essayId]
+      properties:
+        action:
+          type: string
+          enum: [created, updated]
+        essayId:
+          type: string
+
+    AdminParsedMarkdown:
+      type: object
+      required: [frontmatter, sections, derived]
+      properties:
+        frontmatter:
+          type: object
+          additionalProperties: true
+        sections:
+          type: object
+          properties:
+            historicalContextPt:
+              type: string
+            contentOriginalZh:
+              type: string
+            contentModernZh:
+              type: string
+            contentPinyin:
+              type: string
+            contentPt:
+              type: string
+            translationNotesPt:
+              type: string
+        derived:
+          type: object
+          required: [wordCountPt, wordCountZh, estimatedReadingTime]
+          properties:
+            wordCountPt:
+              type: [integer, "null"]
+            wordCountZh:
+              type: [integer, "null"]
+            estimatedReadingTime:
+              type: [integer, "null"]

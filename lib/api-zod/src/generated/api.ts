@@ -204,3 +204,246 @@ export const GetArchiveStatsResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetCurrentAuthUserHeader = zod.object({
+  Authorization: zod.string().optional(),
+});
+
+export const GetCurrentAuthUserResponse = zod.object({
+  user: zod.union([
+    zod.object({
+      id: zod.string(),
+      email: zod.string().email().nullable(),
+      firstName: zod.string().nullable(),
+      lastName: zod.string().nullable(),
+      profileImageUrl: zod.string().nullable(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Start the browser OIDC login flow
+ */
+export const BeginBrowserLoginQueryParams = zod.object({
+  returnTo: zod.coerce.string().optional(),
+});
+
+/**
+ * @summary Complete the browser OIDC login flow
+ */
+export const HandleBrowserLoginCallbackQueryParams = zod.object({
+  code: zod.coerce.string().optional(),
+  state: zod.coerce.string().optional(),
+  iss: zod.coerce.string().url().optional(),
+});
+
+/**
+ * @summary Clear the session and begin OIDC logout
+ */
+export const LogoutBrowserSessionHeader = zod.object({
+  Authorization: zod.string().optional(),
+});
+
+/**
+ * @summary Exchange a mobile OIDC code for a session token
+ */
+
+export const ExchangeMobileAuthorizationCodeBody = zod.object({
+  code: zod.string().min(1),
+  code_verifier: zod.string().min(1),
+  redirect_uri: zod.string().url().min(1),
+  state: zod.string().min(1),
+  nonce: zod.string().min(1).optional(),
+});
+
+export const ExchangeMobileAuthorizationCodeResponse = zod.object({
+  token: zod.string(),
+});
+
+/**
+ * @summary Delete a mobile session token
+ */
+export const LogoutMobileSessionHeader = zod.object({
+  Authorization: zod.string().optional(),
+});
+
+export const LogoutMobileSessionResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Get the currently authenticated admin
+ */
+export const GetAdminMeResponse = zod.object({
+  user: zod.object({
+    id: zod.string(),
+    email: zod.string().email().nullable(),
+    firstName: zod.string().nullable(),
+    lastName: zod.string().nullable(),
+    profileImageUrl: zod.string().nullable(),
+  }),
+  isAdmin: zod.boolean(),
+});
+
+/**
+ * @summary Upload a Markdown file (creates new essay or updates existing)
+ */
+export const UploadAdminEssayBody = zod.object({
+  file: zod.instanceof(File),
+});
+
+export const UploadAdminEssayResponse = zod.object({
+  action: zod.enum(["created", "updated"]),
+  essayId: zod.string(),
+});
+
+/**
+ * @summary Parse a Markdown file without saving
+ */
+export const PreviewAdminEssayBody = zod.object({
+  file: zod.instanceof(File),
+});
+
+export const PreviewAdminEssayResponse = zod.object({
+  frontmatter: zod.record(zod.string(), zod.unknown()),
+  sections: zod.object({
+    historicalContextPt: zod.string().optional(),
+    contentOriginalZh: zod.string().optional(),
+    contentModernZh: zod.string().optional(),
+    contentPinyin: zod.string().optional(),
+    contentPt: zod.string().optional(),
+    translationNotesPt: zod.string().optional(),
+  }),
+  derived: zod.object({
+    wordCountPt: zod.number().nullable(),
+    wordCountZh: zod.number().nullable(),
+    estimatedReadingTime: zod.number().nullable(),
+  }),
+});
+
+/**
+ * @summary List all essays with completeness flags
+ */
+export const ListAdminEssaysResponseItem = zod.object({
+  essayId: zod.string(),
+  titlePt: zod.string(),
+  titleZh: zod.string(),
+  titlePinyin: zod.string().nullish(),
+  collectionSlug: zod.string(),
+  collectionTitlePt: zod.string().nullish(),
+  firstPublishedDate: zod.string().nullish(),
+  essayType: zod.string().optional(),
+  difficultyLevel: zod.string().optional(),
+  hasOriginalZh: zod.boolean(),
+  hasModernZh: zod.boolean(),
+  hasPinyin: zod.boolean(),
+  hasPt: zod.boolean(),
+  isFeatured: zod.boolean(),
+});
+export const ListAdminEssaysResponse = zod.array(ListAdminEssaysResponseItem);
+
+/**
+ * @summary Update essay metadata
+ */
+export const UpdateAdminEssayParams = zod.object({
+  essayId: zod.coerce.string(),
+});
+
+export const UpdateAdminEssayBody = zod.object({
+  titlePt: zod.string().optional(),
+  titleZh: zod.string().optional(),
+  titlePinyin: zod.string().optional(),
+  collectionSlug: zod.string().optional(),
+  firstPublishedDate: zod.string().optional(),
+  firstPublishedVenuePt: zod.string().optional(),
+  firstPublishedVenueZh: zod.string().optional(),
+  pseudonymUsed: zod.string().optional(),
+  pseudonymNotePt: zod.string().optional(),
+  essayType: zod.string().optional(),
+  difficultyLevel: zod.string().optional(),
+  isFeatured: zod.boolean().optional(),
+  translatorName: zod.string().optional(),
+  sourceTextEdition: zod.string().optional(),
+  genreTagsPt: zod.array(zod.string()).optional(),
+  themesPt: zod.array(zod.string()).optional(),
+});
+
+export const UpdateAdminEssayResponse = zod.object({
+  essayId: zod.string(),
+  titlePt: zod.string(),
+  titleZh: zod.string(),
+  titlePinyin: zod.string().nullish(),
+  collectionSlug: zod.string(),
+  firstPublishedDate: zod.string().nullish(),
+  firstPublishedVenuePt: zod.string().nullish(),
+  firstPublishedVenueZh: zod.string().nullish(),
+  pseudonymUsed: zod.string().nullish(),
+  pseudonymNotePt: zod.string().nullish(),
+  essayType: zod.string().optional(),
+  genreTagsPt: zod.array(zod.string()).optional(),
+  themesPt: zod.array(zod.string()).optional(),
+  difficultyLevel: zod.string().optional(),
+  isFeatured: zod.boolean().optional(),
+  translatorName: zod.string().nullish(),
+  sourceTextEdition: zod.string().nullish(),
+  historicalContextPt: zod.string().nullish(),
+  translationNotesPt: zod.string().nullish(),
+  contentOriginalZh: zod.string().nullish(),
+  contentModernZh: zod.string().nullish(),
+  contentPinyin: zod.string().nullish(),
+  contentPt: zod.string().nullish(),
+  wordCountPt: zod.number().nullish(),
+  wordCountZh: zod.number().nullish(),
+  estimatedReadingTime: zod.number().nullish(),
+});
+
+/**
+ * @summary Delete an essay
+ */
+export const DeleteAdminEssayParams = zod.object({
+  essayId: zod.coerce.string(),
+});
+
+export const DeleteAdminEssayResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Get an essay (admin)
+ */
+export const GetAdminEssayParams = zod.object({
+  essayId: zod.coerce.string(),
+});
+
+export const GetAdminEssayResponse = zod.object({
+  essayId: zod.string(),
+  titlePt: zod.string(),
+  titleZh: zod.string(),
+  titlePinyin: zod.string().nullish(),
+  collectionSlug: zod.string(),
+  firstPublishedDate: zod.string().nullish(),
+  firstPublishedVenuePt: zod.string().nullish(),
+  firstPublishedVenueZh: zod.string().nullish(),
+  pseudonymUsed: zod.string().nullish(),
+  pseudonymNotePt: zod.string().nullish(),
+  essayType: zod.string().optional(),
+  genreTagsPt: zod.array(zod.string()).optional(),
+  themesPt: zod.array(zod.string()).optional(),
+  difficultyLevel: zod.string().optional(),
+  isFeatured: zod.boolean().optional(),
+  translatorName: zod.string().nullish(),
+  sourceTextEdition: zod.string().nullish(),
+  historicalContextPt: zod.string().nullish(),
+  translationNotesPt: zod.string().nullish(),
+  contentOriginalZh: zod.string().nullish(),
+  contentModernZh: zod.string().nullish(),
+  contentPinyin: zod.string().nullish(),
+  contentPt: zod.string().nullish(),
+  wordCountPt: zod.number().nullish(),
+  wordCountZh: zod.number().nullish(),
+  estimatedReadingTime: zod.number().nullish(),
+});

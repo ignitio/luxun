@@ -98,6 +98,179 @@ export interface ArchiveStats {
   essaysByVolume: ArchiveStatsEssaysByVolumeItem[];
 }
 
+export interface AuthUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+}
+
+export interface AuthUserEnvelope {
+  user: AuthUser | null;
+}
+
+export interface MobileTokenExchangeRequest {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  code_verifier: string;
+  /** @minLength 1 */
+  redirect_uri: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  nonce?: string;
+}
+
+export interface MobileTokenExchangeSuccess {
+  token: string;
+}
+
+export const LogoutSuccessValue = {
+  success: true,
+} as const;
+export type LogoutSuccess = typeof LogoutSuccessValue;
+
+export interface AdminMeResponse {
+  user: AuthUser;
+  isAdmin: boolean;
+}
+
+export interface AdminEssayRow {
+  essayId: string;
+  titlePt: string;
+  titleZh: string;
+  /** @nullable */
+  titlePinyin?: string | null;
+  collectionSlug: string;
+  /** @nullable */
+  collectionTitlePt?: string | null;
+  /** @nullable */
+  firstPublishedDate?: string | null;
+  essayType?: string;
+  difficultyLevel?: string;
+  hasOriginalZh: boolean;
+  hasModernZh: boolean;
+  hasPinyin: boolean;
+  hasPt: boolean;
+  isFeatured: boolean;
+}
+
+export interface AdminEssayDetail {
+  essayId: string;
+  titlePt: string;
+  titleZh: string;
+  /** @nullable */
+  titlePinyin?: string | null;
+  collectionSlug: string;
+  /** @nullable */
+  firstPublishedDate?: string | null;
+  /** @nullable */
+  firstPublishedVenuePt?: string | null;
+  /** @nullable */
+  firstPublishedVenueZh?: string | null;
+  /** @nullable */
+  pseudonymUsed?: string | null;
+  /** @nullable */
+  pseudonymNotePt?: string | null;
+  essayType?: string;
+  genreTagsPt?: string[];
+  themesPt?: string[];
+  difficultyLevel?: string;
+  isFeatured?: boolean;
+  /** @nullable */
+  translatorName?: string | null;
+  /** @nullable */
+  sourceTextEdition?: string | null;
+  /** @nullable */
+  historicalContextPt?: string | null;
+  /** @nullable */
+  translationNotesPt?: string | null;
+  /** @nullable */
+  contentOriginalZh?: string | null;
+  /** @nullable */
+  contentModernZh?: string | null;
+  /** @nullable */
+  contentPinyin?: string | null;
+  /** @nullable */
+  contentPt?: string | null;
+  /** @nullable */
+  wordCountPt?: number | null;
+  /** @nullable */
+  wordCountZh?: number | null;
+  /** @nullable */
+  estimatedReadingTime?: number | null;
+}
+
+export interface AdminEssayPatch {
+  titlePt?: string;
+  titleZh?: string;
+  titlePinyin?: string;
+  collectionSlug?: string;
+  firstPublishedDate?: string;
+  firstPublishedVenuePt?: string;
+  firstPublishedVenueZh?: string;
+  pseudonymUsed?: string;
+  pseudonymNotePt?: string;
+  essayType?: string;
+  difficultyLevel?: string;
+  isFeatured?: boolean;
+  translatorName?: string;
+  sourceTextEdition?: string;
+  genreTagsPt?: string[];
+  themesPt?: string[];
+}
+
+export interface DeleteSuccess {
+  success: boolean;
+}
+
+export type AdminUploadResultAction =
+  (typeof AdminUploadResultAction)[keyof typeof AdminUploadResultAction];
+
+export const AdminUploadResultAction = {
+  created: "created",
+  updated: "updated",
+} as const;
+
+export interface AdminUploadResult {
+  action: AdminUploadResultAction;
+  essayId: string;
+}
+
+export type AdminParsedMarkdownFrontmatter = { [key: string]: unknown };
+
+export type AdminParsedMarkdownSections = {
+  historicalContextPt?: string;
+  contentOriginalZh?: string;
+  contentModernZh?: string;
+  contentPinyin?: string;
+  contentPt?: string;
+  translationNotesPt?: string;
+};
+
+export type AdminParsedMarkdownDerived = {
+  /** @nullable */
+  wordCountPt: number | null;
+  /** @nullable */
+  wordCountZh: number | null;
+  /** @nullable */
+  estimatedReadingTime: number | null;
+};
+
+export interface AdminParsedMarkdown {
+  frontmatter: AdminParsedMarkdownFrontmatter;
+  sections: AdminParsedMarkdownSections;
+  derived: AdminParsedMarkdownDerived;
+}
+
+export type AuthorizationSessionHeaderParameter = string;
+
 export type ListEssaysParams = {
   /**
    * Full-text search across title, themes, content
@@ -106,4 +279,22 @@ export type ListEssaysParams = {
   collectionSlug?: string;
   essayType?: string;
   difficulty?: string;
+};
+
+export type BeginBrowserLoginParams = {
+  returnTo?: string;
+};
+
+export type HandleBrowserLoginCallbackParams = {
+  code?: string;
+  state?: string;
+  iss?: string;
+};
+
+export type UploadAdminEssayBody = {
+  file: Blob;
+};
+
+export type PreviewAdminEssayBody = {
+  file: Blob;
 };

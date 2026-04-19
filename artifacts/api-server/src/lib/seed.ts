@@ -583,14 +583,12 @@ Aqueles que meramente sobrevivem podem ver vagamente uma esperança débil no sa
 ];
 
 export async function seed() {
-  // Insert collections
-  await db.delete(essaysTable);
-  await db.delete(collectionsTable);
+  await db
+    .insert(collectionsTable)
+    .values(collections)
+    .onConflictDoNothing();
 
-  await db.insert(collectionsTable).values(collections);
-
-  // Insert essays
   for (const essay of essays) {
-    await db.insert(essaysTable).values(essay);
+    await db.insert(essaysTable).values(essay).onConflictDoNothing();
   }
 }
